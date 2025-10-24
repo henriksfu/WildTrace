@@ -1,0 +1,9 @@
+# Android Studio
+.idea/
+*.iml
+.gradle/
+build/
+local.properties
+
+# macOS
+.DS_Store

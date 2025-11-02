@@ -21,8 +21,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.group21.ui.search.SearchView
-import com.example.group21.ui.sightingDetail.SightingDetailView
+import com.example.group21.ui.search.searchView.SearchView
+import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
 
 class MainActivity : ComponentActivity() {

@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("plugin.serialization") version "2.0.21"
+    id("androidx.navigation.safeargs.kotlin")
+
 }
 
 android {
@@ -42,9 +43,7 @@ android {
 
 dependencies {
 
-    implementation("androidx.navigation:navigation-compose")
-    implementation("androidx.navigation:navigation-fragment")
-    implementation("androidx.navigation:navigation-ui")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

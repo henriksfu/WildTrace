@@ -1,4 +1,4 @@
-package com.wildtrace.ui.sightingDetail
+package com.example.group21.ui.search.sightingDetail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

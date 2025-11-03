@@ -52,7 +52,7 @@ fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "signup") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("signup") {
-            signupView(navController)
+            SignUpView_Placeholder(navController)
         }
         composable("login") {
             LoginView_Placeholder(navController)
@@ -110,7 +110,7 @@ fun signupLoginInput(labelText: String, text: String, onChange: (String) -> Unit
         onValueChange = onChange,
         label = { Text(labelText) },
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = colorScheme.surface,
+            focusedContainerColor = colorScheme.background,
             focusedIndicatorColor = colorScheme.primary,
             focusedLabelColor = colorScheme.primary,
             unfocusedContainerColor = colorScheme.primary.copy(alpha = 0.7f),

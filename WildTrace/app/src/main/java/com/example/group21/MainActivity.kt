@@ -24,9 +24,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -39,6 +42,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -112,7 +117,7 @@ fun LoginView(navController: NavController,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 25.dp)
+            .padding(horizontal = 25.dp, vertical = 25.dp)
     ) {
         Image(
             painter = painterResource(id = R.drawable.wildtrace_logo),
@@ -143,12 +148,12 @@ fun LoginView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Log In", 1f, {})
+            ProfileButton("Log In", 1f, viewModel::login)
             ProfileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
         }
-        Spacer(modifier = Modifier.padding(40.dp))
+        Spacer(modifier = Modifier.padding(15.dp))
     }
 }
 
@@ -181,6 +186,8 @@ fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
+    var passwordHidden: Boolean by remember { mutableStateOf(true) }
+
     OutlinedTextField(
         value = text,
         onValueChange = onChange,
@@ -196,6 +203,8 @@ fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
+        visualTransformation =
+            if (passwordHidden && labelText == "Password") PasswordVisualTransformation() else VisualTransformation.None,
         leadingIcon = if (labelText == "Email") {
             { Icon(Icons.Filled.Email,
                 contentDescription = "Email",
@@ -207,6 +216,17 @@ fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
                 modifier = Modifier.size(20.dp)
                 )}
         } else null,
+        trailingIcon = {
+            if(labelText == "Password") {
+                var icon =  if (!passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                var description = if (!passwordHidden) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            }
+            else null
+        },
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -258,7 +278,7 @@ fun SignupView(navController: NavController,
         modifier = Modifier.fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
-            .padding(top = 100.dp)
+            .padding(top = 100.dp, bottom = 25.dp)
     ) {
         Text(
             text = "Profile Details",

@@ -1,5 +1,7 @@
 package com.example.group21
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -39,6 +41,7 @@ class AuthViewModel : ViewModel() {
     fun login() {
         //
         // need to check database to login
+        Log.d("AuthViewModel", "Email: ${emailState.value}; Password: ${passwordState.value}")
     }
 
     fun createProfile(){

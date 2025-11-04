@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,7 +70,7 @@ fun AppNavigation(navController: NavHostController) {
             loginView(navController)
         }
         composable("signup") {
-            SignUpView_Placeholder(navController)
+            signupView(navController)
         }
 
         // --- Steven's Screen (Using Placeholder) ---
@@ -118,12 +119,12 @@ fun loginView(navController: NavController) {
             modifier = Modifier.padding(top = 8.dp),
         )
         Spacer(modifier = Modifier.padding(4.dp))
-        signupLoginInput(
+        loginInput(
             labelText = "Email",
             text = email,
             onChange = { newText -> email = newText }
         )
-        signupLoginInput(
+        loginInput(
             labelText = "Password",
             text = password,
             onChange = { newText -> password = newText }
@@ -131,16 +132,17 @@ fun loginView(navController: NavController) {
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            profileButton("Log In", {})
-            profileButton("Sign Up", {
+            profileButton("Log In", 1f, {})
+            profileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
         }
+        Spacer(modifier = Modifier.padding(32.dp))
     }
 }
 
 @Composable
-fun profileButton(text: String, onClick: () -> Unit) {
+fun profileButton(text: String, alpha: Float, onClick: () -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
 
     Button(
@@ -150,7 +152,7 @@ fun profileButton(text: String, onClick: () -> Unit) {
             .wrapContentHeight()
             .padding(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.tertiary,
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
             contentColor = colorScheme.onBackground,
         ),
         shape = RoundedCornerShape(16.dp)
@@ -164,7 +166,7 @@ fun profileButton(text: String, onClick: () -> Unit) {
     }
 }
 @Composable
-fun signupLoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
+fun loginInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -189,17 +191,80 @@ fun signupLoginInput(labelText: String, text: String, onChange: (String) -> Unit
     )
 }
 
-//Temporary Placeholders (can be removed later)
 @Composable
-fun SignUpView_Placeholder(navController: NavController) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Column(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+fun signupInput(labelText: String, text: String, onChange: (String) -> Unit) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    TextField(
+        value = text,
+        onValueChange = onChange,
+        label = { Text(labelText) },
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = colorScheme.background,
+            unfocusedContainerColor = colorScheme.background,
+            focusedIndicatorColor = colorScheme.primary,
+            unfocusedIndicatorColor = colorScheme.onBackground,
+            focusedLabelColor = colorScheme.primary,
+            unfocusedLabelColor = colorScheme.onBackground,
+            focusedTextColor = colorScheme.primary,
+            unfocusedTextColor = colorScheme.onBackground,
+            cursorColor = colorScheme.onBackground
+        ),
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    )
+}
+
+@Composable
+fun signupView(navController: NavController) {
+    //
+    // Has access to the entered email and password
+    var fName by remember    { mutableStateOf("") }
+    var lName by remember    { mutableStateOf("") }
+    var email by remember    { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(35.dp, Alignment.CenterVertically),
+        modifier = Modifier.fillMaxSize()
+            .padding(horizontal = 25.dp)
+    ) {
+        Text(
+            text = "Profile Details",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 28.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        signupInput(
+            labelText = "First Name",
+            text = fName,
+            onChange = { newText -> fName = newText }
+        )
+        signupInput(
+            labelText = "Last Name",
+            text = lName,
+            onChange = { newText -> lName = newText }
+        )
+        signupInput(
+            labelText = "Email",
+            text = email,
+            onChange = { newText -> email = newText }
+        )
+        signupInput(
+            labelText = "Password",
+            text = password,
+            onChange = { newText -> password = newText }
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            Text("Sign Up Screen (Placeholder)")
-            Button(onClick = { navController.navigate("login")}) { Text("Go to login")}
+            profileButton("Back", 0.5f, {navController.navigate("login")})
+            profileButton("Sign Up", 1f,{
+                navController.navigate("signup")
+            })
         }
     }
 }

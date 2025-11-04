@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,16 +12,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -36,12 +41,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            WildTraceTheme (
-                isSystemInDarkTheme(),
-                dynamicColor = false
-            ){
-                val navController = rememberNavController()
-                AppNavigation(navController = navController)
+            WildTraceTheme(dynamicColor = false) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    AppNavigation(navController = navController)
+                }
             }
         }
     }
@@ -52,7 +59,7 @@ fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "signup") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("signup") {
-            SignUpView_Placeholder(navController)
+            signupView(navController)
         }
         composable("login") {
             LoginView_Placeholder(navController)
@@ -86,7 +93,16 @@ fun signupView(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
+            .padding(horizontal = 25.dp)
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo), // 👈 your drawable
+            contentDescription = "App logo",
+            modifier = Modifier
+                .size(width = 150.dp, height = 150.dp)
+                .padding(8.dp),
+            contentScale = ContentScale.Fit  // how it scales inside the box
+        )
         signupLoginInput(
             labelText = "Username",
             text = email,
@@ -111,15 +127,17 @@ fun signupLoginInput(labelText: String, text: String, onChange: (String) -> Unit
         label = { Text(labelText) },
         colors = TextFieldDefaults.colors(
             focusedContainerColor = colorScheme.background,
+            unfocusedContainerColor = colorScheme.background,
             focusedIndicatorColor = colorScheme.primary,
+            unfocusedIndicatorColor = colorScheme.onBackground,
             focusedLabelColor = colorScheme.primary,
-            unfocusedContainerColor = colorScheme.primary.copy(alpha = 0.7f),
-            unfocusedIndicatorColor = colorScheme.primary.copy(alpha = 0.7f),
-            unfocusedLabelColor = colorScheme.primary.copy(alpha = 0.7f),
-            cursorColor = colorScheme.primary,
+            unfocusedLabelColor = colorScheme.onBackground,
+            focusedTextColor = colorScheme.primary,
+            unfocusedTextColor = colorScheme.onBackground,
+            cursorColor = colorScheme.onBackground
         ),
         modifier = Modifier
-            .padding(16.dp)
+            .padding(8.dp)
             .fillMaxWidth()
     )
 }

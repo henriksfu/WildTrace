@@ -17,9 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -30,7 +37,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -64,13 +70,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController,
+        startDestination = "login",
+        route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("login") {
-            loginView(navController)
+            LoginView(navController)
         }
         composable("signup") {
-            signupView(navController)
+            SignupView(navController)
         }
 
         // --- Steven's Screen (Using Placeholder) ---
@@ -91,16 +99,19 @@ fun AppNavigation(navController: NavHostController) {
 }
 
 @Composable
-fun loginView(navController: NavController) {
-    //
-    // Has access to the entered email and password
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginView(navController: NavController,
+              viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+
+    val email    by viewModel.email
+    val password by viewModel.password
+
+    val scrollState = rememberScrollState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
     ) {
         Image(
@@ -119,30 +130,30 @@ fun loginView(navController: NavController) {
             modifier = Modifier.padding(top = 8.dp),
         )
         Spacer(modifier = Modifier.padding(4.dp))
-        loginInput(
+        LoginInput(
             labelText = "Email",
             text = email,
-            onChange = { newText -> email = newText }
+            onChange = viewModel::onEmailChange
         )
-        loginInput(
+        LoginInput(
             labelText = "Password",
             text = password,
-            onChange = { newText -> password = newText }
+            onChange = viewModel::onPasswordChange
         )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            profileButton("Log In", 1f, {})
-            profileButton("Sign Up", 1f, {
+            ProfileButton("Log In", 1f, {})
+            ProfileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
         }
-        Spacer(modifier = Modifier.padding(32.dp))
+        Spacer(modifier = Modifier.padding(40.dp))
     }
 }
 
 @Composable
-fun profileButton(text: String, alpha: Float, onClick: () -> Unit) {
+fun ProfileButton(text: String, alpha: Float, onClick: () -> Unit) {
     val colorScheme = MaterialTheme.colorScheme
 
     Button(
@@ -166,7 +177,7 @@ fun profileButton(text: String, alpha: Float, onClick: () -> Unit) {
     }
 }
 @Composable
-fun loginInput(labelText: String, text: String, onChange: (String) -> Unit) {
+fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -185,6 +196,17 @@ fun loginInput(labelText: String, text: String, onChange: (String) -> Unit) {
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
+        leadingIcon = if (labelText == "Email") {
+            { Icon(Icons.Filled.Email,
+                contentDescription = "Email",
+                modifier = Modifier.size(20.dp)
+                )}
+        } else if (labelText == "Password") {
+            { Icon(Icons.Filled.Lock,
+                contentDescription = "Password",
+                modifier = Modifier.size(20.dp)
+                )}
+        } else null,
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -192,7 +214,7 @@ fun loginInput(labelText: String, text: String, onChange: (String) -> Unit) {
 }
 
 @Composable
-fun signupInput(labelText: String, text: String, onChange: (String) -> Unit) {
+fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -211,6 +233,7 @@ fun signupInput(labelText: String, text: String, onChange: (String) -> Unit) {
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
+        shape = CutCornerShape(8.dp),
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -218,19 +241,24 @@ fun signupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 }
 
 @Composable
-fun signupView(navController: NavController) {
+fun SignupView(navController: NavController,
+               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     //
     // Has access to the entered email and password
-    var fName by remember    { mutableStateOf("") }
-    var lName by remember    { mutableStateOf("") }
-    var email by remember    { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val email    by viewModel.email
+    val password by viewModel.password
+    val fName    by viewModel.fName
+    val lName    by viewModel.lName
+
+    val scrollState = rememberScrollState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(35.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(35.dp, Alignment.Top),
         modifier = Modifier.fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
+            .padding(top = 100.dp)
     ) {
         Text(
             text = "Profile Details",
@@ -238,31 +266,31 @@ fun signupView(navController: NavController) {
             fontSize = 28.sp,
             modifier = Modifier.padding(top = 8.dp),
         )
-        signupInput(
+        SignupInput(
             labelText = "First Name",
             text = fName,
-            onChange = { newText -> fName = newText }
+            onChange = viewModel::onfNameChange
         )
-        signupInput(
+        SignupInput(
             labelText = "Last Name",
             text = lName,
-            onChange = { newText -> lName = newText }
+            onChange = viewModel::onlNameChange
         )
-        signupInput(
+        SignupInput(
             labelText = "Email",
             text = email,
-            onChange = { newText -> email = newText }
+            onChange = viewModel::onEmailChange
         )
-        signupInput(
+        SignupInput(
             labelText = "Password",
             text = password,
-            onChange = { newText -> password = newText }
+            onChange = viewModel::onPasswordChange
         )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            profileButton("Back", 0.5f, {navController.navigate("login")})
-            profileButton("Sign Up", 1f,{
+            ProfileButton("Back", 0.65f, {navController.navigate("login")})
+            ProfileButton("Sign Up", 1f,{
                 navController.navigate("signup")
             })
         }

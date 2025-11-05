@@ -85,6 +85,9 @@ fun AppNavigation(navController: NavHostController) {
         composable("signup") {
             SignupView(navController)
         }
+        composable("profile") {
+            ProfileView(navController)
+        }
 
         // --- Steven's Screen (Using Placeholder) ---
         composable("map") {
@@ -238,6 +241,8 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
+    var passwordHidden: Boolean by remember { mutableStateOf(true) }
+
     OutlinedTextField(
         value = text,
         onValueChange = onChange,
@@ -254,6 +259,19 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
+        visualTransformation =
+            if (passwordHidden && labelText == "Password") PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = {
+            if(labelText == "Password") {
+                var icon =  if (!passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                var description = if (!passwordHidden) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            }
+            else null
+        },
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(8.dp)
@@ -263,6 +281,65 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
 @Composable
 fun SignupView(navController: NavController,
+               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    //
+    // Has access to the entered email and password
+    val email    by viewModel.email
+    val password by viewModel.password
+    val fName    by viewModel.fName
+    val lName    by viewModel.lName
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        modifier = Modifier.fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp)
+            .padding(top = 100.dp, bottom = 25.dp)
+    ) {
+        Text(
+            text = "Create New Account",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        SignupInput(
+            labelText = "First Name",
+            text = fName,
+            onChange = viewModel::onfNameChange
+        )
+        SignupInput(
+            labelText = "Last Name",
+            text = lName,
+            onChange = viewModel::onlNameChange
+        )
+        SignupInput(
+            labelText = "Email",
+            text = email,
+            onChange = viewModel::onEmailChange
+        )
+        SignupInput(
+            labelText = "Password",
+            text = password,
+            onChange = viewModel::onPasswordChange
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            ProfileButton("Back", 0.65f, {
+                navController.navigate("login")
+            })
+            ProfileButton("Create", 1f,
+                viewModel::createProfile
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileView(navController: NavController,
                viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     //
     // Has access to the entered email and password
@@ -319,8 +396,6 @@ fun SignupView(navController: NavController,
         }
     }
 }
-
-
 @Composable
 fun MapView_Placeholder(navController: NavController) {
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->

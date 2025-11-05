@@ -1,12 +1,22 @@
 package com.example.group21
 
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(application: Application) : ViewModel() {
+
+    private val profilePreferences: SharedPreferences =
+        application.getSharedPreferences("profile_preferences", Context.MODE_PRIVATE)
+
+    // Example keys
+    private val KEY_DB_ID = "db_id"
+    private val KEY_LOGGED_IN = "is_logged_in"
     private val emailState = mutableStateOf("")
     val email: State<String> = emailState
 
@@ -36,6 +46,14 @@ class AuthViewModel : ViewModel() {
 
     fun onfNameChange(new: String){
         fNameState.value = new
+    }
+
+    fun isLoggedIn(): Boolean {
+        return profilePreferences.getBoolean(KEY_LOGGED_IN, false)
+    }
+    
+    fun loggedInDBID(): Long {
+        return profilePreferences.getLong(KEY_DB_ID, -1)
     }
 
     fun login() {

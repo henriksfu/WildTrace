@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController,
-        startDestination = "login",
+        startDestination = "map",
         route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("login") {
@@ -90,9 +90,9 @@ fun AppNavigation(navController: NavHostController) {
             ProfileView(navController)
         }
 
-        // --- Steven's Screen (Using Placeholder) ---
+        // --- Steven's Screen ---
         composable("map") {
-            MapView_Placeholder(navController)
+            MapViewScreen(navController)
         }
 
         composable("search") {

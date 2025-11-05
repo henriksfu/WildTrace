@@ -9,10 +9,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
-class AuthViewModel(application: Application) : ViewModel() {
+class AuthViewModel() : ViewModel() {
 
-    private val profilePreferences: SharedPreferences =
-        application.getSharedPreferences("profile_preferences", Context.MODE_PRIVATE)
 
     // Example keys
     private val KEY_DB_ID = "db_id"
@@ -46,14 +44,6 @@ class AuthViewModel(application: Application) : ViewModel() {
 
     fun onfNameChange(new: String){
         fNameState.value = new
-    }
-
-    fun isLoggedIn(): Boolean {
-        return profilePreferences.getBoolean(KEY_LOGGED_IN, false)
-    }
-
-    fun loggedInDBID(): Long {
-        return profilePreferences.getLong(KEY_DB_ID, -1)
     }
 
     fun login() {

@@ -238,22 +238,23 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
-    TextField(
+    OutlinedTextField(
         value = text,
         onValueChange = onChange,
-        label = { Text(labelText) },
+        label = null,
+        placeholder = { Text(labelText) },
         colors = TextFieldDefaults.colors(
             focusedContainerColor = colorScheme.background,
             unfocusedContainerColor = colorScheme.background,
             focusedIndicatorColor = colorScheme.primary,
             unfocusedIndicatorColor = colorScheme.onBackground,
-            focusedLabelColor = colorScheme.primary,
-            unfocusedLabelColor = colorScheme.onBackground,
+            focusedPlaceholderColor = colorScheme.primary,
+            unfocusedPlaceholderColor = colorScheme.onBackground,
             focusedTextColor = colorScheme.primary,
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
-        shape = CutCornerShape(8.dp),
+        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -274,7 +275,7 @@ fun SignupView(navController: NavController,
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(35.dp, Alignment.Top),
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
         modifier = Modifier.fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
@@ -283,7 +284,7 @@ fun SignupView(navController: NavController,
         Text(
             text = "Profile Details",
             color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 28.sp,
+            fontSize = 30.sp,
             modifier = Modifier.padding(top = 8.dp),
         )
         SignupInput(
@@ -309,10 +310,12 @@ fun SignupView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Back", 0.65f, {navController.navigate("login")})
-            ProfileButton("Sign Up", 1f,{
-                navController.navigate("signup")
+            ProfileButton("Back", 0.65f, {
+                navController.navigate("login")
             })
+            ProfileButton("Create Profile", 1f,
+                viewModel::createProfile
+            )
         }
     }
 }

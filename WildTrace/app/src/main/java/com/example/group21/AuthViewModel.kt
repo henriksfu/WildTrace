@@ -41,11 +41,12 @@ class AuthViewModel : ViewModel() {
     fun login() {
         //
         // need to check database to login
-        Log.d("AuthViewModel", "Email: ${emailState.value}; Password: ${passwordState.value}")
+        Log.i("AuthViewModel", "Email: ${emailState.value}; Password: ${passwordState.value}")
     }
 
     fun createProfile(){
         //
         // need to check database to create profile
+        Log.i("AuthViewModel", "Email: ${emailState.value}; Password: ${passwordState.value}; fName: ${fNameState.value}; lName: ${lNameState.value}")
     }
 }

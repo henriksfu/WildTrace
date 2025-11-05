@@ -1,10 +1,14 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("androidx.navigation.safeargs.kotlin")
-
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
+
+
 
 android {
     namespace = "com.example.group21"
@@ -19,6 +23,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+
 
     buildTypes {
         release {
@@ -37,12 +43,15 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
 
 dependencies {
-
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

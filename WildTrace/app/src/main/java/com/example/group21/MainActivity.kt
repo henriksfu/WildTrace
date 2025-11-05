@@ -54,6 +54,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
+import com.google.android.gms.maps.MapView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController,
-        startDestination = "login",
+        startDestination = "map",
         route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("login") {
@@ -321,23 +322,9 @@ fun SignupView(navController: NavController,
 @Composable
 fun MapView_Placeholder(navController: NavController) {
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Text("MAP SCREEN (Placeholder)", modifier = Modifier.align(Alignment.Center))
-
-            // --- Code to be completed by "Map & Sighting Flow Lead - STEVEN" ---
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(onClick = { navController.navigate("search") }) {
-                    Text("Go to Search (TEST)")
-                }
-                Button(onClick = { navController.navigate("sightingDetail") }) {
-                    Text("Go to Detail (TEST)")
-                }
-            }
-        }
+        MapViewScreen(
+            navController = navController,
+            modifier = Modifier.padding(padding).fillMaxSize()
+        )
     }
 }

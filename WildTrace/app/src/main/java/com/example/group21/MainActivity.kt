@@ -86,6 +86,9 @@ fun AppNavigation(navController: NavHostController) {
         composable("signup") {
             SignupView(navController)
         }
+        composable("profile") {
+            ProfileView(navController)
+        }
 
         // --- Steven's Screen (Using Placeholder) ---
         composable("map") {
@@ -239,22 +242,38 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
-    TextField(
+    var passwordHidden: Boolean by remember { mutableStateOf(true) }
+
+    OutlinedTextField(
         value = text,
         onValueChange = onChange,
-        label = { Text(labelText) },
+        label = null,
+        placeholder = { Text(labelText) },
         colors = TextFieldDefaults.colors(
             focusedContainerColor = colorScheme.background,
             unfocusedContainerColor = colorScheme.background,
             focusedIndicatorColor = colorScheme.primary,
             unfocusedIndicatorColor = colorScheme.onBackground,
-            focusedLabelColor = colorScheme.primary,
-            unfocusedLabelColor = colorScheme.onBackground,
+            focusedPlaceholderColor = colorScheme.primary,
+            unfocusedPlaceholderColor = colorScheme.onBackground,
             focusedTextColor = colorScheme.primary,
             unfocusedTextColor = colorScheme.onBackground,
             cursorColor = colorScheme.onBackground
         ),
-        shape = CutCornerShape(8.dp),
+        visualTransformation =
+            if (passwordHidden && labelText == "Password") PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = {
+            if(labelText == "Password") {
+                var icon =  if (!passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                var description = if (!passwordHidden) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            }
+            else null
+        },
+        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -275,16 +294,16 @@ fun SignupView(navController: NavController,
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(35.dp, Alignment.Top),
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
         modifier = Modifier.fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
             .padding(top = 100.dp, bottom = 25.dp)
     ) {
         Text(
-            text = "Profile Details",
+            text = "Create New Account",
             color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 28.sp,
+            fontSize = 30.sp,
             modifier = Modifier.padding(top = 8.dp),
         )
         SignupInput(
@@ -310,15 +329,74 @@ fun SignupView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Back", 0.65f, {navController.navigate("login")})
-            ProfileButton("Sign Up", 1f,{
-                navController.navigate("signup")
+            ProfileButton("Back", 0.65f, {
+                navController.navigate("login")
             })
+            ProfileButton("Create", 1f,
+                viewModel::createProfile
+            )
         }
     }
 }
 
+@Composable
+fun ProfileView(navController: NavController,
+               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    //
+    // Has access to the entered email and password
+    val email    by viewModel.email
+    val password by viewModel.password
+    val fName    by viewModel.fName
+    val lName    by viewModel.lName
 
+    val scrollState = rememberScrollState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        modifier = Modifier.fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp)
+            .padding(top = 100.dp, bottom = 25.dp)
+    ) {
+        Text(
+            text = "Profile Details",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        SignupInput(
+            labelText = "First Name",
+            text = fName,
+            onChange = viewModel::onfNameChange
+        )
+        SignupInput(
+            labelText = "Last Name",
+            text = lName,
+            onChange = viewModel::onlNameChange
+        )
+        SignupInput(
+            labelText = "Email",
+            text = email,
+            onChange = viewModel::onEmailChange
+        )
+        SignupInput(
+            labelText = "Password",
+            text = password,
+            onChange = viewModel::onPasswordChange
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            ProfileButton("Back", 0.65f, {
+                navController.navigate("login")
+            })
+            ProfileButton("Create Profile", 1f,
+                viewModel::createProfile
+            )
+        }
+    }
+}
 @Composable
 fun MapView_Placeholder(navController: NavController) {
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->

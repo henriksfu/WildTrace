@@ -364,36 +364,12 @@ fun ProfileView(navController: NavController,
             fontSize = 30.sp,
             modifier = Modifier.padding(top = 8.dp),
         )
-        SignupInput(
-            labelText = "First Name",
-            text = fName,
-            onChange = viewModel::onfNameChange
+        Text(
+            text = "Profile Details",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
         )
-        SignupInput(
-            labelText = "Last Name",
-            text = lName,
-            onChange = viewModel::onlNameChange
-        )
-        SignupInput(
-            labelText = "Email",
-            text = email,
-            onChange = viewModel::onEmailChange
-        )
-        SignupInput(
-            labelText = "Password",
-            text = password,
-            onChange = viewModel::onPasswordChange
-        )
-        Row(
-            modifier = Modifier.padding(horizontal = 25.dp)
-        ) {
-            ProfileButton("Back", 0.65f, {
-                navController.navigate("login")
-            })
-            ProfileButton("Create Profile", 1f,
-                viewModel::createProfile
-            )
-        }
     }
 }
 @Composable

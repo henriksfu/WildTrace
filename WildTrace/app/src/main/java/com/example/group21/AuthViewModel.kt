@@ -51,7 +51,7 @@ class AuthViewModel(application: Application) : ViewModel() {
     fun isLoggedIn(): Boolean {
         return profilePreferences.getBoolean(KEY_LOGGED_IN, false)
     }
-    
+
     fun loggedInDBID(): Long {
         return profilePreferences.getLong(KEY_DB_ID, -1)
     }

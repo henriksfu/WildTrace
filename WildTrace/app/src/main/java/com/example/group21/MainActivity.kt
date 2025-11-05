@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController,
-        startDestination = "map",
+        startDestination = "login",
         route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("login") {

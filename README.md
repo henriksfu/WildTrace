@@ -1,2 +1,2 @@
-CMPT 373 Mobile Programming
+CMPT 362 Mobile Programming
 Group 21 WildTrace, a wildlife tracking app

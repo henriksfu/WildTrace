@@ -72,7 +72,7 @@ fun MapViewScreen(navController: NavController,
         isMyLocationEnabled = true
     )
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,

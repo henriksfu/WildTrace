@@ -1,6 +1,7 @@
 package com.example.group21
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -55,10 +56,21 @@ import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
 import com.google.android.gms.maps.MapView
-
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val analytics = Firebase.analytics
+        analytics.setAnalyticsCollectionEnabled(true)
+
+        if (BuildConfig.DEBUG) {
+            analytics.setUserProperty("debug_mode", "emulator_api36")
+            Log.d("FirebaseInit", "Debug mode ON – API 36 emulator")
+        }
+
         enableEdgeToEdge()
         setContent {
             WildTraceTheme(dynamicColor = false) {
@@ -119,7 +131,8 @@ fun LoginView(navController: NavController,
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp, vertical = 25.dp)
     ) {
@@ -295,7 +308,8 @@ fun SignupView(navController: NavController,
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
             .padding(top = 100.dp, bottom = 25.dp)
@@ -354,7 +368,8 @@ fun ProfileView(navController: NavController,
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 25.dp)
             .padding(top = 100.dp, bottom = 25.dp)
@@ -378,7 +393,9 @@ fun MapView_Placeholder(navController: NavController) {
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
         MapViewScreen(
             navController = navController,
-            modifier = Modifier.padding(padding).fillMaxSize()
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         )
     }
 }

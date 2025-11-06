@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "402882003741",
+    "project_id": "wildtrace-362",
+    "storage_bucket": "wildtrace-362.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402882003741:android:23418ed42875e48e5617f4",
+        "android_client_info": {
+          "package_name": "com.example.group21"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_S434ABHjhHphsTbJv4BA0PNNjqE5LXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

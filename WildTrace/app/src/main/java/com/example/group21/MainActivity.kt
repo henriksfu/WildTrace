@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        Util.checkPermissions(this)
         setContent {
             WildTraceTheme(dynamicColor = false) {
                 Surface(

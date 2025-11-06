@@ -3,6 +3,7 @@ package com.example.group21
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.io.File
 import java.util.Date
@@ -37,9 +39,9 @@ fun MapViewScreen(navController: NavController,
                   mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val context = LocalContext.current
-    val singapore = LatLng(49.2827, -123.1207)
+    val vancouver = LatLng(49.2827, -123.1207)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
+        position = CameraPosition.fromLatLngZoom(vancouver, 10f)
     }
 
 
@@ -66,10 +68,16 @@ fun MapViewScreen(navController: NavController,
         }
     )
 
+    val mapProperties = MapProperties(
+        isMyLocationEnabled = true
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            properties = mapProperties,
+            onMapClick = { Toast.makeText(context, "Click", Toast.LENGTH_SHORT).show()}
         )
         Column(
             modifier = Modifier

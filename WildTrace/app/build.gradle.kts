@@ -1,3 +1,5 @@
+// app/build.gradle.kts
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -16,6 +18,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // ✅ Secure API keys from local.properties
+        buildConfigField(
+            "String",
+            "INAT_API_KEY",
+            "\"${project.findProperty("INAT_API_KEY") ?: ""}\""
+        )
+        buildConfigField(
+            "String",
+            "WIKI_API_KEY",
+            "\"${project.findProperty("WIKI_API_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -27,20 +41,25 @@ android {
             )
         }
     }
+
+    // ✅ Enable both Compose and BuildConfig
+    buildFeatures {
+        buildConfig = true
+        compose = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
     }
 }
 
 dependencies {
-
+    // --- Core Compose & AndroidX ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -49,6 +68,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // --- Navigation & Lifecycle Compose (critical for your MainActivity) ---
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
+
+    // --- Material icons for AppBar and UI icons ---
+    implementation("androidx.compose.material:material-icons-extended:1.7.4")
+
+    // --- Coroutines (ViewModel + networking) ---
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // --- Networking layer for ApiRepository.kt ---
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // --- Debug/Testing tools ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

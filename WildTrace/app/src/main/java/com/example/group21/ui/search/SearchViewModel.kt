@@ -1,21 +1,60 @@
 package com.example.group21.ui.search.searchView
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 
-// The ViewModel handles the business logic and state for the SearchView.
 class SearchViewModel : ViewModel() {
-    // We can initialize any state here, like the search query or results list.
-    // For now, it's just a simple class to demonstrate the architecture.
 
-    // Example of a function that would be implemented later:
+    val searchResults: SnapshotStateList<String> = mutableStateListOf()
+
+    var isLoading: Boolean = false
+        private set
+
+    var errorMessage: String? = null
+        private set
+
+    /**
+     * Called when user presses the Search button.
+     * For S&T2, we generate mock results to demonstrate real functionality.
+     */
     fun performSearch(query: String) {
-        // Log or call a repository to fetch data
-        println("Searching for: $query")
+        if (query.isBlank()) {
+            // If empty search, clear list
+            searchResults.clear()
+            return
+        }
+
+        // Start "loading"
+        isLoading = true
+        errorMessage = null
+
+        viewModelScope.launch {
+            // Simulate network delay (makes demo look realistic)
+            delay(500)
+
+            // Mock results (replace with real API in final project)
+            val dummyResults = listOf(
+                "Sighting near Burnaby – $query",
+                "Animal: $query (Possible match)",
+                "Wikipedia: $query overview",
+                "Related Species: ${query}us maximus",
+                "More sightings related to \"$query\""
+            )
+
+            searchResults.clear()
+            searchResults.addAll(dummyResults)
+
+            // Loading finished
+            isLoading = false
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        // Called when the ViewModel is no longer used, useful for cleanup.
         println("SearchViewModel cleared.")
     }
 }

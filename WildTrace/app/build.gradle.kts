@@ -1,10 +1,18 @@
 // app/build.gradle.kts
 
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("androidx.navigation.safeargs.kotlin")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
+    //id("com.android.application")//already added
+    id("com.google.gms.google-services")
 }
+
+
 
 android {
     namespace = "com.example.group21"
@@ -31,6 +39,8 @@ android {
             "\"${project.findProperty("WIKI_API_KEY") ?: ""}\""
         )
     }
+
+
 
     buildTypes {
         release {
@@ -60,10 +70,23 @@ android {
 
 dependencies {
     // --- Core Compose & AndroidX ---
+    buildFeatures {
+        buildConfig = true
+        compose = true
+    }
+}
+
+dependencies {
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.maps.android:maps-compose:6.12.0")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -92,4 +115,10 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+    // Firebase Bill of Materials
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.firebase:firebase-analytics")//add other things here
+
 }

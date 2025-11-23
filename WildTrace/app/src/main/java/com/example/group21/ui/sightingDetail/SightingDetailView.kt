@@ -1,4 +1,4 @@
-package com.wildtrace.ui.sightingDetail
+package com.example.group21.ui.search.sightingDetail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +21,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.fillMaxWidth
+
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.logEvent
+
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SightingDetailView(
@@ -33,6 +44,7 @@ fun SightingDetailView(
         viewModel.loadSightingDetails(sightingId)
     }
 
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -46,6 +58,24 @@ fun SightingDetailView(
                     }
                 }
             )
+        },
+        bottomBar = {
+            Button(
+                onClick = {
+                    Firebase.analytics.logEvent("new_sighting") {
+                        param("sightingId", sightingId)
+                        param("timestamp", System.currentTimeMillis())
+                        param("action", "detail_view_interaction")
+                        param("source", "api36_emulator")
+                    }
+
+                    Toast.makeText(context, "Event logged – check DebugView", Toast.LENGTH_SHORT).show()
+                    Log.d("FirebaseTest", "new_sighting → $sightingId")
+                },
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
+            ) {
+                Text("Send to Firebase")
+            }
         }
     ) { paddingValues ->
 

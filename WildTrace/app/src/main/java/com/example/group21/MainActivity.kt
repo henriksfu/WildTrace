@@ -1,38 +1,87 @@
 package com.example.group21
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.group21.ui.search.SearchView
-import com.example.group21.ui.sightingDetail.SightingDetailView
+import com.example.group21.ui.search.searchView.SearchView
+import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
-
+import com.google.android.gms.maps.MapView
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val analytics = Firebase.analytics
+        analytics.setAnalyticsCollectionEnabled(true)
+
+        if (BuildConfig.DEBUG) {
+            analytics.setUserProperty("debug_mode", "emulator_api36")
+            Log.d("FirebaseInit", "Debug mode ON – API 36 emulator")
+        }
+
         enableEdgeToEdge()
+        Util.checkPermissions(this)
         setContent {
-            WildTraceTheme {
-                val navController = rememberNavController()
-                AppNavigation(navController = navController)
+            WildTraceTheme(dynamicColor = false) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    AppNavigation(navController = navController)
+                }
             }
         }
     }
@@ -40,18 +89,23 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "signup") {
+    NavHost(navController = navController,
+        startDestination = "login",
+        route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
-        composable("signup") {
-            SignUpView_Placeholder(navController)
-        }
         composable("login") {
-            LoginView_Placeholder(navController)
+            LoginView(navController)
+        }
+        composable("signup") {
+            SignupView(navController)
+        }
+        composable("profile") {
+            ProfileView(navController)
         }
 
-        // --- Steven's Screen (Using Placeholder) ---
+        // --- Steven's Screen ---
         composable("map") {
-            MapView_Placeholder(navController)
+            MapViewScreen(navController)
         }
 
         composable("search") {
@@ -66,55 +120,286 @@ fun AppNavigation(navController: NavHostController) {
     }
 }
 
-//Temporary Placeholders (can be removed later)
 @Composable
-fun SignUpView_Placeholder(navController: NavController) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Column(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+fun LoginView(navController: NavController,
+              viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+
+    val email    by viewModel.email
+    val password by viewModel.password
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp, vertical = 25.dp)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.wildtrace_logo),
+            contentDescription = "App logo",
+            modifier = Modifier
+                .size(width = 350.dp, height = 200.dp)
+                .padding(horizontal = 8.dp, vertical = 0.dp),
+            contentScale = ContentScale.FillWidth
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        Text(
+            text = "Login",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 28.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Spacer(modifier = Modifier.padding(4.dp))
+        LoginInput(
+            labelText = "Email",
+            text = email,
+            onChange = viewModel::onEmailChange
+        )
+        LoginInput(
+            labelText = "Password",
+            text = password,
+            onChange = viewModel::onPasswordChange
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            Text("Sign Up Screen (Placeholder)")
-            Button(onClick = { navController.navigate("login")}) { Text("Go to login")}
+            ProfileButton("Log In", 1f, {
+                viewModel::login
+                navController.navigate("map")
+            })
+            ProfileButton("Sign Up", 1f, {
+                navController.navigate("signup")
+            })
+        }
+        Spacer(modifier = Modifier.padding(15.dp))
+    }
+}
+
+@Composable
+fun ProfileButton(text: String, alpha: Float, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight()
+            .padding(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
+            contentColor = colorScheme.onBackground,
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(8.dp),
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+@Composable
+fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    var passwordHidden: Boolean by remember { mutableStateOf(true) }
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = onChange,
+        label = { Text(labelText) },
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = colorScheme.background,
+            unfocusedContainerColor = colorScheme.background,
+            focusedIndicatorColor = colorScheme.primary,
+            unfocusedIndicatorColor = colorScheme.onBackground,
+            focusedLabelColor = colorScheme.primary,
+            unfocusedLabelColor = colorScheme.onBackground,
+            focusedTextColor = colorScheme.primary,
+            unfocusedTextColor = colorScheme.onBackground,
+            cursorColor = colorScheme.onBackground
+        ),
+        visualTransformation =
+            if (passwordHidden && labelText == "Password") PasswordVisualTransformation() else VisualTransformation.None,
+        leadingIcon = if (labelText == "Email") {
+            { Icon(Icons.Filled.Email,
+                contentDescription = "Email",
+                modifier = Modifier.size(20.dp)
+                )}
+        } else if (labelText == "Password") {
+            { Icon(Icons.Filled.Lock,
+                contentDescription = "Password",
+                modifier = Modifier.size(20.dp)
+                )}
+        } else null,
+        trailingIcon = {
+            if(labelText == "Password") {
+                var icon =  if (!passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                var description = if (!passwordHidden) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            }
+            else null
+        },
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    )
+}
+
+@Composable
+fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    var passwordHidden: Boolean by remember { mutableStateOf(true) }
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = onChange,
+        label = null,
+        placeholder = { Text(labelText) },
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = colorScheme.background,
+            unfocusedContainerColor = colorScheme.background,
+            focusedIndicatorColor = colorScheme.primary,
+            unfocusedIndicatorColor = colorScheme.onBackground,
+            focusedPlaceholderColor = colorScheme.primary,
+            unfocusedPlaceholderColor = colorScheme.onBackground,
+            focusedTextColor = colorScheme.primary,
+            unfocusedTextColor = colorScheme.onBackground,
+            cursorColor = colorScheme.onBackground
+        ),
+        visualTransformation =
+            if (passwordHidden && labelText == "Password") PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = {
+            if(labelText == "Password") {
+                var icon =  if (!passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                var description = if (!passwordHidden) "Hide password" else "Show password"
+
+                IconButton(onClick = { passwordHidden = !passwordHidden }) {
+                    Icon(imageVector = icon, contentDescription = description)
+                }
+            }
+            else null
+        },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    )
+}
+
+@Composable
+fun SignupView(navController: NavController,
+               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    //
+    // Has access to the entered email and password
+    val email    by viewModel.email
+    val password by viewModel.password
+    val fName    by viewModel.fName
+    val lName    by viewModel.lName
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp)
+            .padding(top = 100.dp, bottom = 25.dp)
+    ) {
+        Text(
+            text = "Create New Account",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        SignupInput(
+            labelText = "First Name",
+            text = fName,
+            onChange = viewModel::onfNameChange
+        )
+        SignupInput(
+            labelText = "Last Name",
+            text = lName,
+            onChange = viewModel::onlNameChange
+        )
+        SignupInput(
+            labelText = "Email",
+            text = email,
+            onChange = viewModel::onEmailChange
+        )
+        SignupInput(
+            labelText = "Password",
+            text = password,
+            onChange = viewModel::onPasswordChange
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            ProfileButton("Back", 0.65f, {
+                navController.navigate("login")
+            })
+            ProfileButton("Create", 1f,
+                viewModel::createProfile
+            )
         }
     }
 }
 
 @Composable
-fun LoginView_Placeholder(navController: NavController) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Column(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("LOGIN SCREEN (Placeholder)")
-            Button(onClick = { navController.navigate("map") }) { Text("Log In") }
-        }
+fun ProfileView(navController: NavController,
+               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    //
+    // Has access to the entered email and password
+    val email    by viewModel.email
+    val password by viewModel.password
+    val fName    by viewModel.fName
+    val lName    by viewModel.lName
+
+    val scrollState = rememberScrollState()
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp)
+            .padding(top = 100.dp, bottom = 25.dp)
+    ) {
+        Text(
+            text = "Profile Details",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Text(
+            text = "Profile Details",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 30.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
     }
 }
-
 @Composable
 fun MapView_Placeholder(navController: NavController) {
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Text("MAP SCREEN (Placeholder)", modifier = Modifier.align(Alignment.Center))
-
-            // --- Code to be completed by "Map & Sighting Flow Lead - STEVEN" ---
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(onClick = { navController.navigate("search") }) {
-                    Text("Go to Search (TEST)")
-                }
-                Button(onClick = { navController.navigate("sightingDetail") }) {
-                    Text("Go to Detail (TEST)")
-                }
-            }
-        }
+        MapViewScreen(
+            navController = navController,
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        )
     }
 }

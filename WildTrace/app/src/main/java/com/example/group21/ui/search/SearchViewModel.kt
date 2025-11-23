@@ -1,4 +1,4 @@
-package com.wildtrace.ui.search
+package com.example.group21.ui.search.searchView
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

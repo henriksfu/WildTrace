@@ -30,7 +30,7 @@ fun PhotoPreviewDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Confirm and Save")
+                Text("Confirm and Search")
             }
         },
         dismissButton = {

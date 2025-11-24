@@ -41,7 +41,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -231,12 +230,12 @@ fun LoginInput(labelText: String, text: String, onChange: (String) -> Unit) {
             { Icon(Icons.Filled.Email,
                 contentDescription = "Email",
                 modifier = Modifier.size(20.dp)
-                )}
+            )}
         } else if (labelText == "Password") {
             { Icon(Icons.Filled.Lock,
                 contentDescription = "Password",
                 modifier = Modifier.size(20.dp)
-                )}
+            )}
         } else null,
         trailingIcon = {
             if(labelText == "Password") {
@@ -307,7 +306,6 @@ fun SignupView(navController: NavController,
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
-    val errorMsg by viewModel.currentErrorMessage
 
     val scrollState = rememberScrollState()
 
@@ -346,18 +344,6 @@ fun SignupView(navController: NavController,
             text = password,
             onChange = viewModel::onPasswordChange
         )
-        Text(
-            text = errorMsg,
-            color = Color.Red,
-            fontSize = 22.sp,
-            modifier = Modifier.padding(2.dp),
-        )
-        Text(
-            text = errorMsg,
-            color = Color.Red,
-            fontSize = 22.sp,
-            modifier = Modifier.padding(2.dp),
-        )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
@@ -373,14 +359,13 @@ fun SignupView(navController: NavController,
 
 @Composable
 fun ProfileView(navController: NavController,
-               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+                viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     //
     // Has access to the entered email and password
     val email    by viewModel.email
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
-    val errorMsg by viewModel.currentErrorMessage
 
     val scrollState = rememberScrollState()
 

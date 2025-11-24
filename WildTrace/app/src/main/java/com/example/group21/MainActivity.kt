@@ -56,6 +56,7 @@ import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
 import com.google.android.gms.maps.MapView
+import com.google.firebase.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
         val analytics = Firebase.analytics
         analytics.setAnalyticsCollectionEnabled(true)
 
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {//always false
             analytics.setUserProperty("debug_mode", "emulator_api36")
             Log.d("FirebaseInit", "Debug mode ON – API 36 emulator")
         }
@@ -166,10 +167,11 @@ fun LoginView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Log In", 1f, {
-                viewModel::login
-                navController.navigate("map")
-            })
+            ProfileButton("Log In", 1f) {
+                viewModel.login {
+                    navController.navigate("map")
+                }
+            }
             ProfileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
@@ -350,9 +352,11 @@ fun SignupView(navController: NavController,
             ProfileButton("Back", 0.65f, {
                 navController.navigate("login")
             })
-            ProfileButton("Create", 1f,
-                viewModel::createProfile
-            )
+            ProfileButton("Create", 1f) {
+                viewModel.createProfile {
+                    navController.navigate("map")
+                }
+            }
         }
     }
 }

@@ -104,12 +104,8 @@ fun MapViewScreen(navController: NavController,
                 )
             }
 
-            Button(onClick = { navController.navigate("search") }) {
-                Text("Go to Search (TEST)")
-            }
-            Button(onClick = { navController.navigate("sightingDetail") }) {
-                Text("Go to Detail (TEST)")
-            }
+            //Button(onClick = { navController.navigate("search") }) {Text("Go to Search (TEST)")}
+            //Button(onClick = { navController.navigate("sightingDetail") }) {Text("Go to Detail (TEST)")}
         }
     }
 }

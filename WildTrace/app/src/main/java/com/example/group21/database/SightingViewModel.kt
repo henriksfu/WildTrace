@@ -1,6 +1,7 @@
 package com.example.group21.database
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 
 //import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
@@ -18,8 +19,7 @@ class SightingViewModel(
         notes: String,
         photoUrls: List<String>
     ) {
-        //val currentUser = FirebaseAuth.getInstance().currentUser ?: return//for authentication
-        val currentUser = "test"
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return//for authentication
 
         viewModelScope.launch {
             val sighting = Sighting(
@@ -30,10 +30,8 @@ class SightingViewModel(
                 notes = notes,
                 photoUrls = photoUrls,
                 //once login is set up
-                //userDisplayName = currentUser.displayName ?: "Anonymous",
-                //userId = currentUser.uid
-                userDisplayName = "Anonymous",
-                userId = "testid123"
+                userDisplayName = currentUser.displayName ?: "Anonymous",
+                userId = currentUser.uid
             )
 
             repository.addSighting(sighting)

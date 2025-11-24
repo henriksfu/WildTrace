@@ -39,6 +39,7 @@ class AuthViewModel : ViewModel() {
 
         if (email.isEmpty() || password.isEmpty()) {
             errorMessageState.value = "Email and password required."
+            Log.w("login","Email and password required")
             return
         }
 

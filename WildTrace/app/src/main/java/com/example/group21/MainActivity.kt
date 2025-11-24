@@ -211,11 +211,9 @@ fun LoginView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Log In", 1f) {
-                viewModel.login {
-                    navController.navigate("map")
-                }
-            }
+            ProfileButton("Log In", 1f, {
+                viewModel.login({navController.navigate("map")})
+            })
             ProfileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
@@ -437,17 +435,6 @@ fun ProfileView(navController: NavController,
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 30.sp,
             modifier = Modifier.padding(top = 8.dp),
-        )
-    }
-}
-@Composable
-fun MapView_Placeholder(navController: NavController) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        MapViewScreen(
-            navController = navController,
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
         )
     }
 }

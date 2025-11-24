@@ -41,28 +41,6 @@ class AuthViewModel : ViewModel() {
             errorMessageState.value = "Email and password required."
             return
         }
-    private val lNameState = mutableStateOf("")
-    val lName: State<String> = lNameState
-
-    private val errorMessageState = mutableStateOf<String?>(null)
-    val errorMessage: State<String?> = errorMessageState
-
-    fun onEmailChange(new: String) { emailState.value = new }
-    fun onPasswordChange(new: String) { passwordState.value = new }
-    fun onfNameChange(new: String) { fNameState.value = new }
-    fun onlNameChange(new: String) { lNameState.value = new }
-
-    // -----------------------------
-    // LOGIN
-    // -----------------------------
-    fun login(onSuccess: () -> Unit) {
-        val email = emailState.value.trim()
-        val password = passwordState.value.trim()
-
-        if (email.isEmpty() || password.isEmpty()) {
-            errorMessageState.value = "Email and password required."
-            return
-        }
 
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->

@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.LocalContext
@@ -102,11 +99,15 @@ fun MapViewScreen(navController: NavController,
                     cameraLauncher.launch(uri)
                 },
                 containerColor = colorScheme.background,
-                contentColor = colorScheme.onBackground
+                contentColor = colorScheme.onBackground,
+                modifier = Modifier
+                    .size(width = 110.dp, height = 110.dp)
+                    .padding(20.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Take a Photo"
+                    contentDescription = "Take a Photo",
+                    modifier = Modifier.fillMaxSize(0.5f)
                 )
             }
 

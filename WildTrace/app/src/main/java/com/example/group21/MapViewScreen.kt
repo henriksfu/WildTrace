@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import com.google.maps.android.compose.GoogleMap
@@ -38,6 +40,8 @@ fun MapViewScreen(navController: NavController,
                   modifier: Modifier = Modifier,
                   mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     val context = LocalContext.current
     val vancouver = LatLng(49.2827, -123.1207)
     val cameraPositionState = rememberCameraPositionState {
@@ -97,6 +101,8 @@ fun MapViewScreen(navController: NavController,
                     uri = createImageFile(context)
                     cameraLauncher.launch(uri)
                 },
+                containerColor = colorScheme.background,
+                contentColor = colorScheme.onBackground
             ) {
                 Icon(
                     imageVector = Icons.Filled.CameraAlt,

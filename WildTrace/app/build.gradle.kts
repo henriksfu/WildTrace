@@ -52,7 +52,6 @@ android {
         }
     }
 
-    // ✅ Enable both Compose and BuildConfig
     buildFeatures {
         buildConfig = true
         compose = true
@@ -65,14 +64,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
-    }
-}
-
-dependencies {
-    // --- Core Compose & AndroidX ---
-    buildFeatures {
-        buildConfig = true
-        compose = true
     }
 }
 
@@ -115,7 +106,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-}
 
     // Firebase Bill of Materials
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))

@@ -95,7 +95,10 @@ fun MapViewScreen(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
-            onMapClick = { Toast.makeText(context, "Click", Toast.LENGTH_SHORT).show()}
+            onMapClick = {
+                expanded = false
+                Toast.makeText(context, "Click", Toast.LENGTH_SHORT).show()
+            }
         )
         Column(
             modifier = Modifier

@@ -35,6 +35,8 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import java.io.File
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun MapViewScreen(
@@ -47,6 +49,8 @@ fun MapViewScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(vancouver, 10f)
     }
+
+    val colorScheme = MaterialTheme.colorScheme
 
     if (mapViewModel.showPhotoDialog.value) {
         PhotoPreviewDialog(
@@ -95,23 +99,31 @@ fun MapViewScreen(
                     uri = createImageFile(context)
                     cameraLauncher.launch(uri)
                 },
+                modifier = Modifier
+                    .padding(12.dp)
+                    .size(width = 80.dp, height = 80.dp),
+                containerColor = colorScheme.background,
+                contentColor = colorScheme.onBackground
             ) {
                 Icon(
                     imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Take a Photo"
+                    contentDescription = "Take a Photo",
+                    modifier = Modifier.fillMaxSize(0.5f)
                 )
             }
 
             // Instruction text below the button
             Text(
                 text = "Click on the camera to begin",
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(fontSize = 16.sp),
+                color = colorScheme.onBackground,
                 modifier = Modifier
+                    .padding(bottom = 20.dp)
                     .background(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        color = colorScheme.background,
                         shape = RoundedCornerShape(8.dp)
                     )
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .padding(8.dp)
             )
         }
     }
@@ -133,5 +145,4 @@ private fun createImageFile(context: Context): Uri {
         "${context.packageName}.fileprovider",
         image
     )
-}
 }

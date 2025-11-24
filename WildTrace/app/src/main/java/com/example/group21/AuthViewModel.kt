@@ -21,6 +21,9 @@ class AuthViewModel() : ViewModel() {
     private val passwordState = mutableStateOf("")
     val password: State<String> = passwordState
 
+    private val currentErrorMessageState = mutableStateOf("")
+    val currentErrorMessage: State<String> = currentErrorMessageState
+
     private val errorMessageState = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = errorMessageState
 

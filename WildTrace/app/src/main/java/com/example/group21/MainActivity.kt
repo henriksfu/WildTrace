@@ -41,6 +41,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -306,6 +307,7 @@ fun SignupView(navController: NavController,
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
+    val errorMsg by viewModel.currentErrorMessage
 
     val scrollState = rememberScrollState()
 
@@ -344,6 +346,18 @@ fun SignupView(navController: NavController,
             text = password,
             onChange = viewModel::onPasswordChange
         )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 22.sp,
+            modifier = Modifier.padding(2.dp),
+        )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 22.sp,
+            modifier = Modifier.padding(2.dp),
+        )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
@@ -366,6 +380,7 @@ fun ProfileView(navController: NavController,
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
+    val errorMsg by viewModel.currentErrorMessage
 
     val scrollState = rememberScrollState()
 

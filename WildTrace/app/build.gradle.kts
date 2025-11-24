@@ -51,19 +51,16 @@ android {
             )
         }
     }
-
-    buildFeatures {
-        buildConfig = true
-        compose = true
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        buildConfig = true
+        compose = true
     }
 }
 
@@ -82,6 +79,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.play.services.location)
 
     // --- Navigation & Lifecycle Compose (critical for your MainActivity) ---
     implementation("androidx.navigation:navigation-compose:2.8.3")

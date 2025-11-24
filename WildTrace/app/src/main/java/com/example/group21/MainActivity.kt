@@ -1,7 +1,11 @@
 package com.example.group21
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,16 +46,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
@@ -89,6 +99,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+
+
+    // just so that viewmodel is saved when moving from map to newSightingEntry
+    val mapViewModel: MapViewModel = viewModel(
+        viewModelStoreOwner = null ?: LocalContext.current as ViewModelStoreOwner
+    )
+
     NavHost(navController = navController,
         startDestination = "login",
         route = "authentication_graph") {
@@ -105,8 +122,35 @@ fun AppNavigation(navController: NavHostController) {
 
         // --- Steven's Screen ---
         composable("map") {
-            MapViewScreen(navController)
+            val context = LocalContext.current
+            val notFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            val notCoarseLocation =  ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            if (notFineLocation && notCoarseLocation) {
+                Toast.makeText(context, "Please grant location permissions to view this screen", Toast.LENGTH_LONG).show()
+            }
+            else{
+                MapViewScreen(navController, mapViewModel = mapViewModel)
+            }
         }
+
+        composable(
+            route = "sighting/{latitude}/{longitude}",
+            arguments = listOf(
+                navArgument("latitude") { type = NavType.FloatType },
+                navArgument("longitude") { type = NavType.FloatType }
+            )
+        ) { backStackEntry ->
+            val latitude = backStackEntry.arguments?.getFloat("latitude")
+            val longitude = backStackEntry.arguments?.getFloat("longitude")
+            NewSightingEntry(
+                navController = navController,
+                lat = latitude,
+                lng = longitude,
+                mapViewModel = mapViewModel
+            )
+        }
+
+
 
         composable("search") {
             SearchView()

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -35,13 +34,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.FileProvider
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Date
 import java.util.Locale
@@ -51,6 +67,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,14 +81,27 @@ fun MapViewScreen(
     mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val context = LocalContext.current
+    val userLocation = getUserLocation().value
     val vancouver = LatLng(49.2827, -123.1207)
+    val location = userLocation ?: vancouver
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(vancouver, 10f)
+        position = CameraPosition.fromLatLngZoom(location, 10f)
     }
+    val scope = rememberCoroutineScope()
 
     var expanded by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
+    LaunchedEffect(userLocation) {
+        userLocation?.let {
+            if (cameraPositionState.position.target != it) {
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
+                    durationMs = 1000
+                )
+            }
+        }
+    }
 
     if (mapViewModel.showPhotoDialog.value) {
         PhotoPreviewDialog(
@@ -86,17 +116,80 @@ fun MapViewScreen(
         )
     }
 
+    if (mapViewModel.showSightingDialog.value) {
+        SightingDisplayDialog(
+            onConfirm = {
+                mapViewModel.dismissSightingDialog()
+            },
+            onDismiss = {
+                mapViewModel.dismissSightingDialog()
+            },
+            sighting = mapViewModel.sightingMarker.value!!
+        )
+    }
+
+
+    var uri: Uri = Uri.EMPTY
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                mapViewModel.setImageUri(uri)
+            }
+        }
+    )
+
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
     )
-
+    var clickedPoint by remember {mutableStateOf<LatLng?>(null)}
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
-            onMapClick = { Toast.makeText(context, "Click", Toast.LENGTH_SHORT).show()}
-        )
+            onMapClick = { point->
+                clickedPoint = point
+            } ,
+            onMapLongClick =  {
+                mapViewModel.toggleMarkers()
+            }
+
+        ) {
+            mapViewModel.markers.forEach { sightingMarker ->
+                Marker(
+                    tag = sightingMarker.id,
+                    state = sightingMarker.state,
+                    title = sightingMarker.title + " Sighting",
+                    snippet = "Click this to see full details",
+                    visible = sightingMarker.isVisible.value,
+                    onClick = {
+                        sightingMarker.state.showInfoWindow()
+                        true
+                    },
+                    onInfoWindowClick = {
+                        mapViewModel.showSightingDialog(it.tag as String)
+                    }
+
+                )
+            }
+
+            if (clickedPoint != null) {
+                val markerState = rememberUpdatedMarkerState(position = clickedPoint!!)
+                markerState.showInfoWindow()
+                Marker(
+                    state = markerState,
+                    title = "Click the marker to create a new sighting",
+                    onClick = {
+                        navController.
+                        navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}")
+                        true
+                    }
+                )
+
+            }
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -146,6 +239,52 @@ fun MapViewScreen(
                     )
                     .padding(8.dp)
             )
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                    bottom = 100.dp
+                ),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            val maxWidth = 180.dp
+            Button(onClick = {
+                navController.
+                navigate("sighting/${cameraPositionState.position.target.latitude}/${cameraPositionState.position.target.longitude}")
+            },
+                modifier = Modifier.widthIn(max = maxWidth))
+            {
+                Text("Create New Sighting at Current Location",
+                    maxLines = Int.MAX_VALUE,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Button(onClick = {
+                scope.launch {
+                    val currentPosition = cameraPositionState.position.target
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLng(
+                            mapViewModel.randomSighting(
+                                currentPosition
+                            )
+                        )
+                    )
+                }
+            },
+                modifier = Modifier.widthIn(max = maxWidth))
+            {
+                Text("Go to Random Sighting",
+                    maxLines = Int.MAX_VALUE,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -247,10 +386,12 @@ fun AddSightingButton(
                 )
             }
         }
+
     }
 }
 
-private fun createImageFile(context: Context): Uri {
+fun createImageFile(context: Context): Uri {
+
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CANADA).format(Date())
     val imageFileName = "JPEG_" + timeStamp + "_"
 

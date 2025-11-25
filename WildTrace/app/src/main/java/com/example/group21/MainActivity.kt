@@ -375,7 +375,7 @@ fun SignupView(navController: NavController,
             text = "Create New Account",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 30.sp,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 25.dp),
         )
         SignupInput(
             labelText = "First Name",

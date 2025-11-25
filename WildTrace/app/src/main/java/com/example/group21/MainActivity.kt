@@ -45,6 +45,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -171,6 +172,7 @@ fun LoginView(navController: NavController,
 
     val email    by viewModel.email
     val password by viewModel.password
+    val errorMsg by viewModel.errorMessage
 
     val scrollState = rememberScrollState()
 
@@ -207,6 +209,12 @@ fun LoginView(navController: NavController,
             labelText = "Password",
             text = password,
             onChange = viewModel::onPasswordChange
+        )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(4.dp),
         )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
@@ -350,12 +358,13 @@ fun SignupView(navController: NavController,
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
+    val errorMsg by viewModel.errorMessage
 
     val scrollState = rememberScrollState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        verticalArrangement = Arrangement.spacedBy(15.dp, Alignment.Top),
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
@@ -387,6 +396,11 @@ fun SignupView(navController: NavController,
             labelText = "Password",
             text = password,
             onChange = viewModel::onPasswordChange
+        )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 14.sp,
         )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
@@ -421,9 +435,9 @@ fun ProfileView(navController: NavController,
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 25.dp)
+            .padding(horizontal = 20.dp)
             .padding(top = 100.dp, bottom = 25.dp)
-    ) {
+    ){
         Text(
             text = "Profile Details",
             color = MaterialTheme.colorScheme.onBackground,

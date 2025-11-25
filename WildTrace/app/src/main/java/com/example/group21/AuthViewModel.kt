@@ -22,8 +22,8 @@ class AuthViewModel : ViewModel() {
     private val lNameState = mutableStateOf("")
     val lName: State<String> = lNameState
 
-    private val errorMessageState = mutableStateOf<String?>(null)
-    val errorMessage: State<String?> = errorMessageState
+    private val errorMessageState = mutableStateOf("")
+    val errorMessage: State<String> = errorMessageState
 
     fun onEmailChange(new: String) { emailState.value = new }
     fun onPasswordChange(new: String) { passwordState.value = new }
@@ -47,20 +47,11 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.i("AuthViewModel", "Login successful")
+                    resetStates()
                     onSuccess()
                 } else {
                     Log.e("AuthViewModel", "Login failed", task.exception)
-                    errorMessageState.value = task.exception?.message
-                }
-            }
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.i("AuthViewModel", "Login successful")
-                    onSuccess()
-                } else {
-                    Log.e("AuthViewModel", "Login failed", task.exception)
-                    errorMessageState.value = task.exception?.message
+                    errorMessageState.value = task.exception?.message?:""
                 }
             }
     }
@@ -81,12 +72,21 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.i("AuthViewModel", "Account Created: ${auth.currentUser?.uid}")
+                    resetStates()
                     onSuccess()
                 } else {
                     Log.e("AuthViewModel", "Sign Up Failed", task.exception)
-                    errorMessageState.value = task.exception?.message
+                    errorMessageState.value = task.exception?.message?:""
                 }
             }
+    }
+
+    fun resetStates(){
+        emailState.value = ""
+        passwordState.value = ""
+        lNameState.value = ""
+        fNameState.value = ""
+        errorMessageState.value = ""
     }
 }
 

@@ -406,6 +406,7 @@ fun SignupView(navController: NavController,
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
             ProfileButton("Back", 0.65f, {
+                viewModel.resetStates()
                 navController.navigate("login")
             })
             ProfileButton("Create", 1f) {

@@ -1,6 +1,7 @@
 package com.example.group21
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -100,6 +101,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
@@ -110,11 +112,16 @@ fun AppNavigation(navController: NavHostController) {
     ) {
 
         // --- Reid's Screens ---
-        composable("login") {
-            LoginView(navController)
+        composable("login") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authViewModel: AuthViewModel = viewModel(authEntry)
+            LoginView(navController, authViewModel)
         }
-        composable("signup") {
-            SignupView(navController)
+
+        composable("signup") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authViewModel: AuthViewModel = viewModel(authEntry)
+            SignupView(navController, authViewModel)
         }
         composable("profile") {
             ProfileView(navController)
@@ -124,7 +131,9 @@ fun AppNavigation(navController: NavHostController) {
         composable("map") { backStackEntry ->
 
             // ViewModels scoped to this NavGraph level
-            val mapViewModel: MapViewModel = viewModel(backStackEntry)
+
+            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val mapViewModel: MapViewModel = viewModel(graphEntry)
 
             val context = LocalContext.current
             val notFineLocation =
@@ -152,8 +161,10 @@ fun AppNavigation(navController: NavHostController) {
         ) { backStackEntry ->
 
             // make sure its same viewmodel instances
-            val mapViewModel: MapViewModel = viewModel(backStackEntry)
-            val sightingViewModel: SightingViewModel = viewModel(backStackEntry)
+
+            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val mapViewModel: MapViewModel = viewModel(graphEntry)
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
             val latitude = backStackEntry.arguments?.getFloat("latitude")
             val longitude = backStackEntry.arguments?.getFloat("longitude")
@@ -181,7 +192,7 @@ fun AppNavigation(navController: NavHostController) {
 
 @Composable
 fun LoginView(navController: NavController,
-              viewModel: AuthViewModel = viewModel()) {
+              viewModel: AuthViewModel) {
 
     val email    by viewModel.email
     val password by viewModel.password
@@ -364,7 +375,7 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
 @Composable
 fun SignupView(navController: NavController,
-               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+               viewModel: AuthViewModel) {
     //
     // Has access to the entered email and password
     val email    by viewModel.email

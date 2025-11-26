@@ -251,7 +251,16 @@ fun MapViewScreen(
                 modifier = Modifier.widthIn(max = maxWidth))
             {
                 Text("Create New Sighting at Current Location",
-                    maxLines = Int.MAX_VALUE,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Button(onClick = {
+
+            },
+                modifier = Modifier.widthIn(max = maxWidth))
+            {
+                Text("Load All Sightings",
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )

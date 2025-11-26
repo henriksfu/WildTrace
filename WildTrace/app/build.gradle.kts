@@ -51,19 +51,16 @@ android {
             )
         }
     }
-
-    buildFeatures {
-        buildConfig = true
-        compose = true
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        buildConfig = true
+        compose = true
     }
 }
 
@@ -82,6 +79,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.play.services.location)
 
     // --- Navigation & Lifecycle Compose (critical for your MainActivity) ---
     implementation("androidx.navigation:navigation-compose:2.8.3")
@@ -99,6 +97,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation(libs.androidx.compose.animation)
 
+
     // --- Debug/Testing tools ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -110,6 +109,8 @@ dependencies {
 
     // Firebase Bill of Materials
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-    implementation("com.google.firebase:firebase-analytics")//add other things here
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
 
 }

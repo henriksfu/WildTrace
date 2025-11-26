@@ -1,10 +1,10 @@
 package com.example.group21.database
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-
-//import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.launch
 
@@ -13,10 +13,9 @@ class SightingViewModel(
 ) : ViewModel() {
 
     fun saveSighting(sighting: Sighting) {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return //for authentication
+        //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //for authentication
 
         viewModelScope.launch {
-
             Log.i("sighting","Calling repo.saveSighting")
             repository.addSighting(sighting)
                 .onSuccess { docId ->
@@ -28,16 +27,14 @@ class SightingViewModel(
         }
     }
 
-    // Example: load all sightings
-    fun loadSightings(onResult: (List<Sighting>) -> Unit) {
+    private val _allSightings = MutableLiveData<List<Sighting>>()//private real data
+    val allSightings: LiveData<List<Sighting>> = _allSightings//public fake data
+
+    fun loadAllSightings() {
         viewModelScope.launch {
-            repository.getAllSightings()
-                .onSuccess { list ->
-                    onResult(list)
-                }
-                .onFailure { e ->
-                    println("Error loading sightings: $e")
-                }
+            Log.i("sighting", "Calling repo.getAllSightings()")
+            val list = repository.getAllSightings()
+            _allSightings.value = list
         }
     }
 }

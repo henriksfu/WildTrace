@@ -3,6 +3,8 @@ package com.example.group21
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
+import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,6 +65,7 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.ui.unit.sp
+import com.example.group21.database.SightingViewModel
 
 @Composable
 fun MapViewScreen(
@@ -78,6 +81,19 @@ fun MapViewScreen(
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
     val scope = rememberCoroutineScope()
+    
+    val sightingViewModel: SightingViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        Log.d("MAP_SCREEN", "Fetching all sightings...")
+        sightingViewModel.loadAllSightings()
+
+        sightingViewModel.allSightings.observeForever { list ->
+            Log.d("MAP_SCREEN", "Got ${list.size} sightings:")
+            list.forEach {
+                Log.d("MAP_SCREEN", "→ ${it.animalName} (${it.count}x) at ${it.location}")
+            }
+        }
+    }
 
     var expanded by remember { mutableStateOf(false) }
 

@@ -4,8 +4,8 @@ import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.viewmodel.compose.viewModel
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -74,7 +74,6 @@ fun MapViewScreen(
     modifier: Modifier = Modifier,
     mapViewModel: MapViewModel
 ) {
-    val context = LocalContext.current
     val userLocation = getUserLocation().value
     val vancouver = LatLng(49.2827, -123.1207)
     val location = userLocation ?: vancouver
@@ -110,18 +109,6 @@ fun MapViewScreen(
         }
     }
 
-    if (mapViewModel.showPhotoDialog.value) {
-        PhotoPreviewDialog(
-            photoUri = mapViewModel.imageUri.value!!,
-            onConfirm = {
-                mapViewModel.dismissPhotoDialog()
-                navController.navigate("sightingDetail")
-            },
-            onDismiss = {
-                mapViewModel.dismissPhotoDialog()
-            }
-        )
-    }
 
     if (mapViewModel.showSightingDialog.value) {
         SightingDisplayDialog(
@@ -136,16 +123,6 @@ fun MapViewScreen(
     }
 
 
-    var uri: Uri = Uri.EMPTY
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success ->
-            if (success) {
-                mapViewModel.setImageUri(uri)
-            }
-        }
-    )
 
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
@@ -210,6 +187,7 @@ fun MapViewScreen(
             ) {
 
                 AddSightingButton(
+                    navController,
                     mapViewModel,
                     expanded = expanded,
                     onExpandedChange = { expanded = it }
@@ -307,6 +285,7 @@ fun MapViewScreen(
 
 @Composable
 fun AddSightingButton(
+    navController: NavController,
     mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit
@@ -315,17 +294,31 @@ fun AddSightingButton(
     // Is it expanded
     val colorScheme = MaterialTheme.colorScheme
 
-    var uri: Uri = Uri.EMPTY
+    var uri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                mapViewModel.setImageUri(uri)
+                mapViewModel.setImageUri(uri!!)
             }
         }
     )
+
+    if (mapViewModel.showPhotoDialog.value) {
+        PhotoPreviewDialog(
+            photoUri = mapViewModel.imageUri.value!!,
+            onConfirm = {
+                mapViewModel.dismissPhotoDialog()
+                navController.navigate("sightingDetail")
+            },
+            onDismiss = {
+                mapViewModel.dismissPhotoDialog()
+            }
+        )
+    }
+
 
     Box(
         modifier = Modifier.wrapContentSize(),
@@ -342,7 +335,7 @@ fun AddSightingButton(
                     onClick = {
                         onExpandedChange(false)
                         uri = createImageFile(context)
-                        cameraLauncher.launch(uri)
+                        cameraLauncher.launch(uri!!)
                     },
                     containerColor = colorScheme.background,
                     contentColor = colorScheme.onBackground,

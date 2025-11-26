@@ -109,7 +109,7 @@ fun AppNavigation(navController: NavHostController) {
     )
 
     NavHost(navController = navController,
-        startDestination = "login",
+        startDestination = "map",
         route = "authentication_graph") {
         // --- Reid's Screens (Using Placeholders) ---
         composable("login") {
@@ -168,7 +168,7 @@ fun AppNavigation(navController: NavHostController) {
 
 @Composable
 fun LoginView(navController: NavController,
-              viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+              viewModel: AuthViewModel = viewModel()) {
 
     val email    by viewModel.email
     val password by viewModel.password

@@ -19,9 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
+import com.example.group21.database.Sighting
+import com.example.group21.database.SightingViewModel
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.GeoPoint
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -101,7 +107,8 @@ fun NewSightingEntry(
     navController: NavController,
     lat: Float?,
     lng: Float?,
-    mapViewModel: MapViewModel = viewModel()
+    mapViewModel: MapViewModel = viewModel(),
+    sightingViewModel: SightingViewModel = viewModel(),
 ) {
     var title by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
@@ -282,7 +289,19 @@ fun NewSightingEntry(
                 Button(
                     onClick = {
                         // insert into database
-                        // TODO insert bitmap instead of uri?
+                        val sighting: Sighting = Sighting(
+                            title,
+                            "",
+                            1,
+                            GeoPoint(lat?.toDouble()?:0.0, lng?.toDouble()?:0.0),
+                            "",
+                            imageUri.toString(),
+                            FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
+                            FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                            Timestamp.now()
+                        )
+                        Log.i("save","made sighting")
+                        sightingViewModel.saveSighting(sighting)
                         mapViewModel.addSighting(
                             title,
                             comment,

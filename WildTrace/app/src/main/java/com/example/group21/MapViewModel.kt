@@ -129,7 +129,6 @@ class MapViewModel : ViewModel() {
         lng: Float?
     ) {
         addMarker(LatLng(lat!!.toDouble(), lng!!.toDouble()), title, imageUri, comment)
-
     }
 
 }

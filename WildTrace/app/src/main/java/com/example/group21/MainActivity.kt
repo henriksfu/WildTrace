@@ -105,7 +105,7 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = "map",
+        startDestination = "login",
         route = "authentication_graph"
     ) {
 

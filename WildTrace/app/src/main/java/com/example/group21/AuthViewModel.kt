@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 
 class AuthViewModel : ViewModel() {
 
@@ -22,8 +23,8 @@ class AuthViewModel : ViewModel() {
     private val lNameState = mutableStateOf("")
     val lName: State<String> = lNameState
 
-    private val errorMessageState = mutableStateOf<String?>(null)
-    val errorMessage: State<String?> = errorMessageState
+    private val errorMessageState = mutableStateOf("")
+    val errorMessage: State<String> = errorMessageState
 
     fun onEmailChange(new: String) { emailState.value = new }
     fun onPasswordChange(new: String) { passwordState.value = new }
@@ -39,6 +40,7 @@ class AuthViewModel : ViewModel() {
 
         if (email.isEmpty() || password.isEmpty()) {
             errorMessageState.value = "Email and password required."
+            Log.w("login","Email and password required")
             return
         }
 
@@ -46,10 +48,26 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.i("AuthViewModel", "Login successful")
+                    resetStates()
                     onSuccess()
                 } else {
-                    Log.e("AuthViewModel", "Login failed", task.exception)
-                    errorMessageState.value = task.exception?.message
+                    val exception = task.exception
+                    if (exception is FirebaseAuthException) {
+
+                        when (exception.errorCode) {
+                            "ERROR_USER_NOT_FOUND" -> { errorMessageState.value = "No account with that email exists." }
+                            "ERROR_WRONG_PASSWORD" -> { errorMessageState.value = "Incorrect password." }
+                            "ERROR_INVALID_EMAIL" -> { errorMessageState.value = "Invalid email address." }
+                            "ERROR_USER_DISABLED" -> { errorMessageState.value = "This account has been disabled." }
+                            else -> { errorMessageState.value = "Authentication failed: ${exception.message}" }
+                        }
+
+                        Log.e("AuthViewModel", "Login failed (${exception.errorCode})", exception)
+
+                    } else {
+                        errorMessageState.value = "An unknown error occurred."
+                        Log.e("AuthViewModel", "Login failed", exception)
+                    }
                 }
             }
     }
@@ -70,12 +88,32 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.i("AuthViewModel", "Account Created: ${auth.currentUser?.uid}")
+                    resetStates()
                     onSuccess()
                 } else {
-                    Log.e("AuthViewModel", "Sign Up Failed", task.exception)
-                    errorMessageState.value = task.exception?.message
+                    val exception = task.exception
+                    if (exception is FirebaseAuthException) {
+                        when (exception.errorCode) {
+                            "ERROR_EMAIL_ALREADY_IN_USE" -> { errorMessageState.value = "That email is already registered." }
+                            "ERROR_INVALID_EMAIL" -> { errorMessageState.value = "Please enter a valid email address." }
+                            "ERROR_WEAK_PASSWORD" -> { errorMessageState.value = "Password must be at least 6 characters." }
+                            else -> { errorMessageState.value = "Sign-up failed: ${exception.message ?: "Unknown error"}" }
+                        }
+                        Log.e("AuthViewModel","Sign Up Failed (${exception.errorCode})",exception)
+                    } else {
+                        errorMessageState.value = "An unexpected error occurred."
+                        Log.e("AuthViewModel", "Sign Up Failed", exception)
+                    }
                 }
             }
+    }
+
+    fun resetStates(){
+        emailState.value = ""
+        passwordState.value = ""
+        lNameState.value = ""
+        fNameState.value = ""
+        errorMessageState.value = ""
     }
 }
 
@@ -154,3 +192,4 @@ class AuthViewModel : ViewModel() {
 //            }
 //    }
 //}
+

@@ -10,7 +10,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
 import kotlin.math.abs
 
-// TODO put all relevant sighting info as member variables
 data class SightingMarker(
     val id: String,
     val state: MarkerState,
@@ -129,7 +128,6 @@ class MapViewModel : ViewModel() {
         lng: Float?
     ) {
         addMarker(LatLng(lat!!.toDouble(), lng!!.toDouble()), title, imageUri, comment)
-
     }
 
 }

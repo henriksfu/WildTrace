@@ -5,6 +5,7 @@ import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -22,10 +23,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,16 +39,12 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.FileProvider
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -66,16 +61,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Handyman
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.ui.unit.sp
+import com.example.group21.database.SightingViewModel
 
 @Composable
 fun MapViewScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    mapViewModel: MapViewModel
 ) {
     val userLocation = getUserLocation().value
     val vancouver = LatLng(49.2827, -123.1207)
@@ -84,6 +81,19 @@ fun MapViewScreen(
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
     val scope = rememberCoroutineScope()
+    
+    val sightingViewModel: SightingViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        Log.d("MAP_SCREEN", "Fetching all sightings...")
+        sightingViewModel.loadAllSightings()
+
+        sightingViewModel.allSightings.observeForever { list ->
+            Log.d("MAP_SCREEN", "Got ${list.size} sightings:")
+            list.forEach {
+                Log.d("MAP_SCREEN", "→ ${it.animalName} (${it.count}x) at ${it.location}")
+            }
+        }
+    }
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -203,7 +213,7 @@ fun MapViewScreen(
 
             // Instruction text below the button
             Text(
-                text = "Upload a picture or take a new one",
+                text = "Take a picture or add a manual entry",
                 style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
                 color = colorScheme.onBackground,
                 modifier = Modifier
@@ -235,7 +245,16 @@ fun MapViewScreen(
                 modifier = Modifier.widthIn(max = maxWidth))
             {
                 Text("Create New Sighting at Current Location",
-                    maxLines = Int.MAX_VALUE,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Button(onClick = {
+
+            },
+                modifier = Modifier.widthIn(max = maxWidth))
+            {
+                Text("Load All Sightings",
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -335,6 +354,7 @@ fun AddSightingButton(
                 FloatingActionButton(
                     onClick = {
                         onExpandedChange(false)
+
                     },
                     containerColor = colorScheme.background,
                     contentColor = colorScheme.onBackground,
@@ -344,8 +364,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.FileUpload,
-                        contentDescription = "Upload A File",
+                        imageVector = Icons.Filled.Handyman,
+                        contentDescription = "Add manual entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }
@@ -376,7 +396,6 @@ fun AddSightingButton(
                 )
             }
         }
-
     }
 }
 

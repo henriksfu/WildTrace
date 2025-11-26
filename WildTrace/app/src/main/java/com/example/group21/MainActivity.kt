@@ -1,6 +1,7 @@
 package com.example.group21
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -45,6 +46,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -62,6 +64,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.group21.database.SightingViewModel
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
@@ -98,42 +101,57 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
-
-    // just so that viewmodel is saved when moving from map to newSightingEntry
-    val mapViewModel: MapViewModel = viewModel(
-        viewModelStoreOwner = null ?: LocalContext.current as ViewModelStoreOwner
-    )
-
-    NavHost(navController = navController,
+    NavHost(
+        navController = navController,
         startDestination = "login",
-        route = "authentication_graph") {
-        // --- Reid's Screens (Using Placeholders) ---
-        composable("login") {
-            LoginView(navController)
+        route = "authentication_graph"
+    ) {
+
+        // --- Reid's Screens ---
+        composable("login") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authViewModel: AuthViewModel = viewModel(authEntry)
+            LoginView(navController, authViewModel)
         }
-        composable("signup") {
-            SignupView(navController)
+
+        composable("signup") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authViewModel: AuthViewModel = viewModel(authEntry)
+            SignupView(navController, authViewModel)
         }
         composable("profile") {
             ProfileView(navController)
         }
 
-        // --- Steven's Screen ---
-        composable("map") {
+        // --- Map Screen ---
+        composable("map") { backStackEntry ->
+
+            // ViewModels scoped to this NavGraph level
+
+            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val mapViewModel: MapViewModel = viewModel(graphEntry)
+
             val context = LocalContext.current
-            val notFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            val notCoarseLocation =  ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            val notFineLocation =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            val notCoarseLocation =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+
             if (notFineLocation && notCoarseLocation) {
                 Toast.makeText(context, "Please grant location permissions to view this screen", Toast.LENGTH_LONG).show()
-            }
-            else{
-                MapViewScreen(navController, mapViewModel = mapViewModel)
+            } else {
+                MapViewScreen(
+                    navController = navController,
+                    mapViewModel = mapViewModel
+                )
             }
         }
 
+        // --- New Sighting Screen ---
         composable(
             route = "sighting/{latitude}/{longitude}",
             arguments = listOf(
@@ -141,17 +159,24 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("longitude") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
+
+            // make sure its same viewmodel instances
+
+            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val mapViewModel: MapViewModel = viewModel(graphEntry)
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
+
             val latitude = backStackEntry.arguments?.getFloat("latitude")
             val longitude = backStackEntry.arguments?.getFloat("longitude")
+
             NewSightingEntry(
                 navController = navController,
                 lat = latitude,
                 lng = longitude,
-                mapViewModel = mapViewModel
+                mapViewModel = mapViewModel,
+                sightingViewModel = sightingViewModel
             )
         }
-
-
 
         composable("search") {
             SearchView()
@@ -167,10 +192,11 @@ fun AppNavigation(navController: NavHostController) {
 
 @Composable
 fun LoginView(navController: NavController,
-              viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+              viewModel: AuthViewModel) {
 
     val email    by viewModel.email
     val password by viewModel.password
+    val errorMsg by viewModel.errorMessage
 
     val scrollState = rememberScrollState()
 
@@ -208,14 +234,18 @@ fun LoginView(navController: NavController,
             text = password,
             onChange = viewModel::onPasswordChange
         )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(4.dp),
+        )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Log In", 1f) {
-                viewModel.login {
-                    navController.navigate("map")
-                }
-            }
+            ProfileButton("Log In", 1f, {
+                viewModel.login({navController.navigate("map")})
+            })
             ProfileButton("Sign Up", 1f, {
                 navController.navigate("signup")
             })
@@ -345,19 +375,20 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 
 @Composable
 fun SignupView(navController: NavController,
-               viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+               viewModel: AuthViewModel) {
     //
     // Has access to the entered email and password
     val email    by viewModel.email
     val password by viewModel.password
     val fName    by viewModel.fName
     val lName    by viewModel.lName
+    val errorMsg by viewModel.errorMessage
 
     val scrollState = rememberScrollState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.Top),
+        verticalArrangement = Arrangement.spacedBy(15.dp, Alignment.Top),
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
@@ -368,7 +399,7 @@ fun SignupView(navController: NavController,
             text = "Create New Account",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 30.sp,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 25.dp),
         )
         SignupInput(
             labelText = "First Name",
@@ -390,10 +421,16 @@ fun SignupView(navController: NavController,
             text = password,
             onChange = viewModel::onPasswordChange
         )
+        Text(
+            text = errorMsg,
+            color = Color.Red,
+            fontSize = 14.sp,
+        )
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
             ProfileButton("Back", 0.65f, {
+                viewModel.resetStates()
                 navController.navigate("login")
             })
             ProfileButton("Create", 1f) {
@@ -423,9 +460,9 @@ fun ProfileView(navController: NavController,
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 25.dp)
+            .padding(horizontal = 20.dp)
             .padding(top = 100.dp, bottom = 25.dp)
-    ) {
+    ){
         Text(
             text = "Profile Details",
             color = MaterialTheme.colorScheme.onBackground,
@@ -437,17 +474,6 @@ fun ProfileView(navController: NavController,
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 30.sp,
             modifier = Modifier.padding(top = 8.dp),
-        )
-    }
-}
-@Composable
-fun MapView_Placeholder(navController: NavController) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        MapViewScreen(
-            navController = navController,
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
         )
     }
 }

@@ -11,7 +11,7 @@ data class Sighting(
     val count: Long = 1,
     val location: GeoPoint? = null,
     val notes: String = "",
-    val photoUrls: List<String> = emptyList(),
+    val photoUrl: String = "",
     val userDisplayName: String = "",
     val userId: String = "",
 

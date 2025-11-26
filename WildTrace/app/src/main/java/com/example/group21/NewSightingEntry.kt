@@ -107,8 +107,8 @@ fun NewSightingEntry(
     navController: NavController,
     lat: Float?,
     lng: Float?,
-    mapViewModel: MapViewModel = viewModel(),
-    sightingViewModel: SightingViewModel = viewModel(),
+    mapViewModel: MapViewModel,
+    sightingViewModel: SightingViewModel,
 ) {
     var title by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
@@ -300,7 +300,7 @@ fun NewSightingEntry(
                             FirebaseAuth.getInstance().currentUser?.uid ?: "",
                             Timestamp.now()
                         )
-                        Log.i("save","made sighting")
+                        Log.e("save","made sighting")
                         sightingViewModel.saveSighting(sighting)
                         mapViewModel.addSighting(
                             title,

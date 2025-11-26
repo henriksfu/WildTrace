@@ -59,6 +59,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Handyman
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -68,7 +69,7 @@ import androidx.compose.ui.unit.sp
 fun MapViewScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    mapViewModel: MapViewModel
 ) {
     val context = LocalContext.current
     val userLocation = getUserLocation().value
@@ -218,7 +219,7 @@ fun MapViewScreen(
 
             // Instruction text below the button
             Text(
-                text = "Upload a picture or take a new one",
+                text = "Take a picture or add a manual entry",
                 style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
                 color = colorScheme.onBackground,
                 modifier = Modifier
@@ -335,6 +336,7 @@ fun AddSightingButton(
                 FloatingActionButton(
                     onClick = {
                         onExpandedChange(false)
+
                     },
                     containerColor = colorScheme.background,
                     contentColor = colorScheme.onBackground,
@@ -344,8 +346,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.FileUpload,
-                        contentDescription = "Upload A File",
+                        imageVector = Icons.Filled.Handyman,
+                        contentDescription = "Add manual entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }

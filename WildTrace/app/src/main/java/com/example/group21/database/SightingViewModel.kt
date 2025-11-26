@@ -13,11 +13,13 @@ class SightingViewModel(
 ) : ViewModel() {
 
     fun saveSighting(sighting: Sighting) {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return //for authentication
-
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        //if(currentUser == null){
+        //    Log.e("sighting","not logged in!")
+        //    return //for authentication
+        //}
+        Log.e("sighting","Calling repo.saveSighting")
         viewModelScope.launch {
-
-            Log.i("sighting","Calling repo.saveSighting")
             repository.addSighting(sighting)
                 .onSuccess { docId ->
                     println("Sighting saved with ID: $docId")

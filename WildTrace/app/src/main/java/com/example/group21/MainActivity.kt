@@ -63,6 +63,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.group21.database.SightingViewModel
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
@@ -102,16 +103,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
-
-    // just so that viewmodel is saved when moving from map to newSightingEntry
-    val mapViewModel: MapViewModel = viewModel(
-        viewModelStoreOwner = null ?: LocalContext.current as ViewModelStoreOwner
-    )
-
-    NavHost(navController = navController,
+    NavHost(
+        navController = navController,
         startDestination = "map",
-        route = "authentication_graph") {
-        // --- Reid's Screens (Using Placeholders) ---
+        route = "authentication_graph"
+    ) {
+
+        // --- Reid's Screens ---
         composable("login") {
             LoginView(navController)
         }
@@ -122,19 +120,29 @@ fun AppNavigation(navController: NavHostController) {
             ProfileView(navController)
         }
 
-        // --- Steven's Screen ---
-        composable("map") {
+        // --- Map Screen ---
+        composable("map") { backStackEntry ->
+
+            // ViewModels scoped to this NavGraph level
+            val mapViewModel: MapViewModel = viewModel(backStackEntry)
+
             val context = LocalContext.current
-            val notFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            val notCoarseLocation =  ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            val notFineLocation =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            val notCoarseLocation =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+
             if (notFineLocation && notCoarseLocation) {
                 Toast.makeText(context, "Please grant location permissions to view this screen", Toast.LENGTH_LONG).show()
-            }
-            else{
-                MapViewScreen(navController, mapViewModel = mapViewModel)
+            } else {
+                MapViewScreen(
+                    navController = navController,
+                    mapViewModel = mapViewModel
+                )
             }
         }
 
+        // --- New Sighting Screen ---
         composable(
             route = "sighting/{latitude}/{longitude}",
             arguments = listOf(
@@ -142,17 +150,22 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("longitude") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
+
+            // make sure its same viewmodel instances
+            val mapViewModel: MapViewModel = viewModel(backStackEntry)
+            val sightingViewModel: SightingViewModel = viewModel(backStackEntry)
+
             val latitude = backStackEntry.arguments?.getFloat("latitude")
             val longitude = backStackEntry.arguments?.getFloat("longitude")
+
             NewSightingEntry(
                 navController = navController,
                 lat = latitude,
                 lng = longitude,
-                mapViewModel = mapViewModel
+                mapViewModel = mapViewModel,
+                sightingViewModel = sightingViewModel
             )
         }
-
-
 
         composable("search") {
             SearchView()

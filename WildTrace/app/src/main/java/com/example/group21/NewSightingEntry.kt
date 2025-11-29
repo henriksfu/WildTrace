@@ -167,76 +167,32 @@ fun NewSightingEntry(
     val scrollState = rememberScrollState()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 25.dp, vertical = 25.dp)
+            .padding(horizontal = 15.dp, vertical = 25.dp)
     ){
         Text(
             text = "Create New Sighting",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 28.sp,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 24.dp),
         )
         entryInput(
             "Animal Name",
             animalName,
             {newName -> animalName = newName}
         )
-        Row(
-            modifier = Modifier.padding(horizontal = 25.dp)
-        ) {
-            EntryButtonWithIcon("Camera", 0.65f, "Camera", {
-                navController.navigate("login")
-            })
-            EntryButtonWithIcon("Gallery", 0.65f, "Gallery", {
-                //
-            })
-        }
-    }
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "New Sighting Entry",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-        }
-    )
-    { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                "Sighting Photo",
-                modifier = Modifier.align(Alignment.Start)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val imageModifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .aspectRatio(16f / 9f)
+        Text(
+            text = "Sighting Photo",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 16.sp,
+            modifier = Modifier,
+        )
+        //
+        // If there is an image, display it, otherwise placeholder text
+        (
             if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,
@@ -249,108 +205,79 @@ fun NewSightingEntry(
                 )
             } else {
                 Box(
-                    modifier = imageModifier.fillMaxWidth().height(200.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("No Photo Selected", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(onClick = {
-                    tempUri = createImageFile(context)
-                    cameraLauncher.launch(tempUri)
-                }) {
-                    Icon(Icons.Filled.CameraAlt, contentDescription = "Camera")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Camera")
-                }
-
-                Button(onClick = {
-                    galleryLauncher.launch("image/*")
-                }) {
-                    Icon(Icons.Filled.PhotoLibrary, contentDescription = "Gallery")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Gallery")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Date of Sighting:", modifier = Modifier.weight(1f))
-                DatePickerButton(
-                    dateMillis = selectedDateMillis,
-                    onDateSelected = { selectedDateMillis = it }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Time of Sighting:", modifier = Modifier.weight(1f))
-                TimePickerButton(
-                    timeMillis = selectedTimeMillis,
-                    onTimeSelected = { selectedTimeMillis = it }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedTextField(
-                value = comment,
-                onValueChange = { comment = it },
-                label = { Text("Comment") },
+        )
+        //
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            EntryButtonWithIcon("Camera", 0.65f, "Camera", {
+                tempUri = createImageFile(context)
+                cameraLauncher.launch(tempUri)
+            })
+            EntryButtonWithIcon("Gallery", 0.65f, "Gallery", {
+                galleryLauncher.launch("image/*")
+            })
+        }
+        //
+        // Show the date and time of this entry
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Date of Sighting:", modifier = Modifier.weight(1f))
+            DatePickerButton(
+                dateMillis = selectedDateMillis,
+                onDateSelected = { selectedDateMillis = it }
             )
+        }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel")
-                }
-
-                Button(
-                    onClick = {
-                        // insert into database
-                        val sighting = Sighting(
-                            animalName,
-                            "",
-                            1,
-                            GeoPoint(lat?.toDouble() ?: 0.0, lng?.toDouble() ?: 0.0),
-                            "",
-                            imageUri.toString(),
-                            FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
-                            FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                            Timestamp.now()
-                        )
-                        Log.e("save", "made sighting")
-                        sightingViewModel.saveSighting(sighting)
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Save Sighting")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Time of Sighting:", modifier = Modifier.weight(1f))
+            TimePickerButton(
+                timeMillis = selectedTimeMillis,
+                onTimeSelected = { selectedTimeMillis = it }
+            )
+        }
+        //
+        entryInput(
+            "Comment",
+            comment,
+            { c -> comment = c}
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            EntryButton("Cancel", 0.65f, {
+                navController.popBackStack()
+            })
+            EntryButton("Save Entry", 0.65f, {
+                //
+                // insert into database
+                val sighting = Sighting(
+                    animalName,
+                    "",
+                    1,
+                    GeoPoint(lat?.toDouble() ?: 0.0, lng?.toDouble() ?: 0.0),
+                    "",
+                    imageUri.toString(),
+                    FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
+                    FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                    Timestamp.now()
+                )
+                sightingViewModel.saveSighting(sighting)
+                navController.popBackStack()
+            })
         }
     }
 }
@@ -406,7 +333,7 @@ fun EntryButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () ->
                 },
             contentDescription = "Button Icon: Gallery or Camera"
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = text,
             modifier = Modifier.padding(8.dp),

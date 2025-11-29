@@ -4,6 +4,7 @@ package com.example.group21
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -40,13 +41,15 @@ fun PhotoPreviewDialog(
             AsyncImage(
                 model = photoUri,
                 contentDescription = "Preview of photo",
-                modifier = modifier,
-                contentScale = ContentScale.FillWidth
+                modifier = modifier
+                    .fillMaxHeight(0.8f)
+                    .fillMaxHeight(0.5f)
+
             )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Confirm and Search")
+                Text("Confirm")
             }
         },
         dismissButton = {

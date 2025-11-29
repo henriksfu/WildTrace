@@ -107,7 +107,7 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = "login",
+        startDestination = "map",
         route = "authentication_graph"
     ) {
 
@@ -134,6 +134,7 @@ fun AppNavigation(navController: NavHostController) {
 
             val graphEntry = navController.getBackStackEntry("authentication_graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
             val context = LocalContext.current
             val notFineLocation =
@@ -146,7 +147,8 @@ fun AppNavigation(navController: NavHostController) {
             } else {
                 MapViewScreen(
                     navController = navController,
-                    mapViewModel = mapViewModel
+                    mapViewModel = mapViewModel,
+                    sightingViewModel = sightingViewModel
                 )
             }
         }
@@ -159,9 +161,8 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("longitude") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
-
+            //
             // make sure its same viewmodel instances
-
             val graphEntry = navController.getBackStackEntry("authentication_graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)

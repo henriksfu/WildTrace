@@ -1,11 +1,16 @@
 package com.example.group21
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
 import kotlin.math.abs
@@ -19,12 +24,38 @@ data class SightingMarker(
     val imageUri: Uri?
 )
 
-class MapViewModel : ViewModel() {
+class MapViewModel( ) : ViewModel() {
     private val _imageUri = mutableStateOf<Uri?>(null)
     val imageUri: State<Uri?> = _imageUri
-
     private val _markers = mutableStateListOf<SightingMarker>()
     val markers: List<SightingMarker> = _markers
+    private val _showSightingDialog = mutableStateOf(false)
+    val showSightingDialog: State<Boolean> = _showSightingDialog
+    val sightingMarker: MutableState<SightingMarker?> = mutableStateOf(null)
+    private val _userLocation = mutableStateOf<LatLng?>(null)
+    val userLocation: State<LatLng?> = _userLocation
+    private lateinit var fusedClient: FusedLocationProviderClient
+
+    //
+    // Get the user' current location. This is used for adding entries
+    @SuppressLint("MissingPermission")
+    fun fetchUserLocation(context: Context) {
+        //
+        // If the fused client hasn't been created yet, do so with the context passed
+        if( !::fusedClient.isInitialized ) {
+            fusedClient = LocationServices.getFusedLocationProviderClient(context)
+        }
+        //
+        // Use the client to get the current location
+        fusedClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            if (location != null) {
+                _userLocation.value = LatLng(location.latitude, location.longitude)
+            }
+        }
+    }
 
     fun setImageUri(uri: Uri) {
         _imageUri.value = uri
@@ -64,11 +95,6 @@ class MapViewModel : ViewModel() {
     fun dismissPhotoDialog() {
         _showPhotoDialog.value = false
     }
-
-    private val _showSightingDialog = mutableStateOf(false)
-    val showSightingDialog: State<Boolean> = _showSightingDialog
-    val sightingMarker: MutableState<SightingMarker?> = mutableStateOf(null)
-
 
     fun showSightingDialog(sightingID: String){
         sightingMarker.value = _markers.find { it.id == sightingID }
@@ -115,19 +141,6 @@ class MapViewModel : ViewModel() {
         }
         marker.state.showInfoWindow()
         return marker.state.position
-    }
-
-    // TODO replace with database insert
-    fun addSighting(
-        title: String,
-        comment: String,
-        imageUri: Uri?,
-        selectedDate: Long,
-        selectedTime: Long,
-        lat: Float?,
-        lng: Float?
-    ) {
-        addMarker(LatLng(lat!!.toDouble(), lng!!.toDouble()), title, imageUri, comment)
     }
 
 }

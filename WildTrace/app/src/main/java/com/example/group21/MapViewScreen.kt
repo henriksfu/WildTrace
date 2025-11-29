@@ -9,11 +9,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -60,30 +57,37 @@ import java.util.Locale
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Handyman
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.ui.unit.sp
 import com.example.group21.database.SightingViewModel
 
+val vancouver = LatLng(49.2827, -123.1207)
 @Composable
 fun MapViewScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+    sightingViewModel: SightingViewModel
 ) {
-    val userLocation = getUserLocation().value
-    val vancouver = LatLng(49.2827, -123.1207)
+    val context = LocalContext.current
+    val userLocation by mapViewModel.userLocation
+    //
+    // Default location in case can't find the user's
     val location = userLocation ?: vancouver
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
     val scope = rememberCoroutineScope()
-    
-    val sightingViewModel: SightingViewModel = viewModel()
+
+    //
+    // On launch
     LaunchedEffect(Unit) {
+        //
+        // Get the user's location
+        mapViewModel.fetchUserLocation(context)
         Log.d("MAP_SCREEN", "Fetching all sightings...")
         sightingViewModel.loadAllSightings()
 
@@ -185,14 +189,14 @@ fun MapViewScreen(
             Row(
                 verticalAlignment = Alignment.Bottom
             ) {
-
                 AddSightingButton(
                     navController,
                     mapViewModel,
                     expanded = expanded,
-                    onExpandedChange = { expanded = it }
+                    onExpandedChange = { expanded = it },
+                    userLocation
                 )
-
+                //
                 // For Searching entries
                 FloatingActionButton(
                     onClick = { /* TODO */ },
@@ -250,7 +254,7 @@ fun MapViewScreen(
                 )
             }
             Button(onClick = {
-
+                sightingViewModel.loadAllSightings()
             },
                 modifier = Modifier.widthIn(max = maxWidth))
             {
@@ -284,19 +288,22 @@ fun MapViewScreen(
 }
 
 @Composable
+//
+// This button hides two smaller popouts that let the user select "manual" entry or "automatic" entry
 fun AddSightingButton(
     navController: NavController,
-    mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    mapViewModel: MapViewModel,
     expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit
+    onExpandedChange: (Boolean) -> Unit,
+    userLocation: LatLng?,
 ){
-    //
-    // Is it expanded
     val colorScheme = MaterialTheme.colorScheme
-
+    //
+    // Save the uri for the image that will get selected
     var uri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-
+    //
+    // camera launcher intent for automatic entry
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -305,7 +312,8 @@ fun AddSightingButton(
             }
         }
     )
-
+    //
+    // When
     if (mapViewModel.showPhotoDialog.value) {
         PhotoPreviewDialog(
             photoUri = mapViewModel.imageUri.value!!,
@@ -345,8 +353,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.PhotoCamera,
-                        contentDescription = "Take a Photo",
+                        imageVector = Icons.Filled.AutoFixHigh,
+                        contentDescription = "Add Automatic Entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }
@@ -354,7 +362,9 @@ fun AddSightingButton(
                 FloatingActionButton(
                     onClick = {
                         onExpandedChange(false)
-
+                        val lat = userLocation?.latitude ?: vancouver.latitude
+                        val lng = userLocation?.longitude ?: vancouver.longitude
+                        navController.navigate("sighting/${lat}/${lng}")
                     },
                     containerColor = colorScheme.background,
                     contentColor = colorScheme.onBackground,
@@ -364,8 +374,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Handyman,
-                        contentDescription = "Add manual entry",
+                        imageVector = Icons.Filled.Draw,
+                        contentDescription = "Add Manual entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }

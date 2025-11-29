@@ -27,14 +27,19 @@ class SightingViewModel(
         }
     }
 
-    private val _allSightings = MutableLiveData<List<Sighting>>()//private real data
-    val allSightings: LiveData<List<Sighting>> = _allSightings//public fake data
+    private val _allSightings = MutableLiveData<List<Sighting>>() //private real data
+    val allSightings: LiveData<List<Sighting>> = _allSightings //public fake data
 
     fun loadAllSightings() {
         viewModelScope.launch {
             Log.i("sighting", "Calling repo.getAllSightings()")
             val list = repository.getAllSightings()
             _allSightings.value = list
+            if( _allSightings.value != null) {
+                for (item in _allSightings.value!!) {
+                    Log.d("Sighting", item.toString())
+                }
+            }
         }
     }
 }

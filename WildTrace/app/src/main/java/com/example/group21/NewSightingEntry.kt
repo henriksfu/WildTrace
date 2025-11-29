@@ -2,6 +2,7 @@ package com.example.group21
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.graphics.drawable.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -20,9 +21,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.sp
 import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
 import com.google.firebase.Timestamp
@@ -110,14 +124,15 @@ fun NewSightingEntry(
     mapViewModel: MapViewModel,
     sightingViewModel: SightingViewModel,
 ) {
-    var title by remember { mutableStateOf("") }
-    var comment by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var animalName by rememberSaveable { mutableStateOf("") }
+    var comment by rememberSaveable { mutableStateOf("") }
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-    var selectedDateMillis by remember { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
-    var selectedTimeMillis by remember { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
+    var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
+    var selectedTimeMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     var tempUri: Uri = Uri.EMPTY
-
+    //
+    // For saving the URI when the user takes a picture
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -127,7 +142,8 @@ fun NewSightingEntry(
             }
         }
     )
-
+    //
+    // for saving the image when the  user select a file
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
@@ -146,7 +162,39 @@ fun NewSightingEntry(
             }
         )
     }
-
+    //
+    // Make scrollable
+    val scrollState = rememberScrollState()
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 25.dp, vertical = 25.dp)
+    ){
+        Text(
+            text = "Create New Sighting",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 28.sp,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        entryInput(
+            "Animal Name",
+            animalName,
+            {newName -> animalName = newName}
+        )
+        Row(
+            modifier = Modifier.padding(horizontal = 25.dp)
+        ) {
+            EntryButtonWithIcon("Camera", 0.65f, "Camera", {
+                navController.navigate("login")
+            })
+            EntryButtonWithIcon("Gallery", 0.65f, "Gallery", {
+                //
+            })
+        }
+    }
     Scaffold(
         topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -176,13 +224,6 @@ fun NewSightingEntry(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Animal Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -289,30 +330,21 @@ fun NewSightingEntry(
                 Button(
                     onClick = {
                         // insert into database
-                        val sighting: Sighting = Sighting(
-                            title,
+                        val sighting = Sighting(
+                            animalName,
                             "",
                             1,
-                            GeoPoint(lat?.toDouble()?:0.0, lng?.toDouble()?:0.0),
+                            GeoPoint(lat?.toDouble() ?: 0.0, lng?.toDouble() ?: 0.0),
                             "",
                             imageUri.toString(),
                             FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
                             FirebaseAuth.getInstance().currentUser?.uid ?: "",
                             Timestamp.now()
                         )
-                        Log.e("save","made sighting")
+                        Log.e("save", "made sighting")
                         sightingViewModel.saveSighting(sighting)
-                        mapViewModel.addSighting(
-                            title,
-                            comment,
-                            imageUri,
-                            selectedDateMillis,
-                            selectedTimeMillis,
-                            lat,
-                            lng
-                        )
                         navController.popBackStack()
-                              },
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Save Sighting")
@@ -320,5 +352,91 @@ fun NewSightingEntry(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+fun entryInput(labelText: String, text: String, onChange: (String) -> Unit) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = onChange,
+        label = { Text(labelText) },
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = colorScheme.background,
+            unfocusedContainerColor = colorScheme.background,
+            focusedIndicatorColor = colorScheme.primary,
+            unfocusedIndicatorColor = colorScheme.onBackground,
+            focusedLabelColor = colorScheme.primary,
+            unfocusedLabelColor = colorScheme.onBackground,
+            focusedTextColor = colorScheme.primary,
+            unfocusedTextColor = colorScheme.onBackground,
+            cursorColor = colorScheme.onBackground
+        ),
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+    )
+}
+
+@Composable
+fun EntryButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight()
+            .padding(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
+            contentColor = colorScheme.onBackground,
+        ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Icon(
+            imageVector =
+                when (icon){
+                    "Camera" -> Icons.Filled.PhotoCamera
+                    "Gallery" -> Icons.Filled.FileUpload
+                    else -> Icons.Filled.QuestionMark
+                },
+            contentDescription = "Button Icon: Gallery or Camera"
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            modifier = Modifier.padding(8.dp),
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
+fun EntryButton(text: String, alpha: Float, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight()
+            .padding(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
+            contentColor = colorScheme.onBackground,
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(8.dp),
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }

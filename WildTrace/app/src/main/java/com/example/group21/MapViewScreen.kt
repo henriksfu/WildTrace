@@ -275,20 +275,15 @@ fun MapViewScreen(
     }
 
     if (mapViewModel.showSightingDialog.value) {
-        Popup(
-            alignment = Alignment.Center,
-            onDismissRequest = { mapViewModel.dismissSightingDialog() }
-        ) {
-            SightingDisplayDialog(
-                onConfirm = {
-                    mapViewModel.dismissSightingDialog()
-                },
-                onDismiss = {
-                    mapViewModel.dismissSightingDialog()
-                },
-                sighting = mapViewModel.sightingMarker.value!!
-            )
-        }
+        SightingDisplayDialog(
+            onConfirm = {
+                mapViewModel.dismissSightingDialog()
+            },
+            onDismiss = {
+                mapViewModel.dismissSightingDialog()
+            },
+            sighting = mapViewModel.sightingMarker.value!!
+        )
     }
 }
 

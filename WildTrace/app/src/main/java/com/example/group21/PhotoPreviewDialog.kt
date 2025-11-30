@@ -42,34 +42,27 @@ fun PhotoPreviewDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0x80000000)),
-        contentAlignment = Alignment.Center
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
+        AsyncImage(
+            model = photoUri,
+            contentDescription = "Preview of photo",
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AsyncImage(
-                model = photoUri,
-                contentDescription = "Preview of photo",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ProfileButton("Back", 1f, onDismiss)
-                Spacer(modifier = Modifier.padding(24.dp))
-                ProfileButton("Create", 1f, onConfirm)
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            ProfileButton("Back", 1f, onDismiss)
+            Spacer(modifier = Modifier.padding(24.dp))
+            ProfileButton("Create", 1f, onConfirm)
         }
     }
 }

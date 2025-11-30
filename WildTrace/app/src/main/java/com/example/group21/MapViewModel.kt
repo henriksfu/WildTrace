@@ -57,9 +57,9 @@ class MapViewModel( ) : ViewModel() {
         }
     }
 
-    fun setImageUri(uri: Uri) {
+    fun setImageUri(uri: Uri, showPhotoDialog: Boolean = true) {
         _imageUri.value = uri
-        showPhotoDialog()
+        if(showPhotoDialog) showPhotoDialog()
     }
 
     init {

@@ -308,7 +308,7 @@ fun AddSightingButton(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                mapViewModel.setImageUri(uri!!)
+                mapViewModel.setImageUri(uri!!, true)
             }
         }
     )
@@ -319,7 +319,6 @@ fun AddSightingButton(
             photoUri = mapViewModel.imageUri.value!!,
             onConfirm = {
                 mapViewModel.dismissPhotoDialog()
-                navController.navigate("sightingDetail")
             },
             onDismiss = {
                 mapViewModel.dismissPhotoDialog()

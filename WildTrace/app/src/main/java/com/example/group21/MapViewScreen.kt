@@ -102,18 +102,9 @@ fun MapViewScreen(
     }
 
     var expanded by remember { mutableStateOf(false) }
+    var mapLoaded by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
-    LaunchedEffect(userLocation) {
-        userLocation?.let {
-            if (cameraPositionState.position.target != it) {
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                    durationMs = 1000
-                )
-            }
-        }
-    }
 
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
@@ -130,8 +121,10 @@ fun MapViewScreen(
             } ,
             onMapLongClick =  {
                 mapViewModel.toggleMarkers()
+            },
+            onMapLoaded = {
+                mapLoaded = true
             }
-
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
                 Marker(
@@ -149,6 +142,15 @@ fun MapViewScreen(
                     }
 
                 )
+            }
+
+            LaunchedEffect(mapLoaded, userLocation) {
+                if (mapLoaded && userLocation != null) {
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngZoom(userLocation!!, 15f),
+                        durationMs = 1000
+                    )
+                }
             }
 
             if (clickedPoint != null) {
@@ -272,6 +274,19 @@ fun MapViewScreen(
                 )
             }
         }
+        //
+        // When triggered, show the photo preview dialog
+        if (mapViewModel.showPhotoDialog.value) {
+            PhotoPreviewDialog(
+                photoUri = mapViewModel.imageUri.value!!,
+                onConfirm = {
+                    mapViewModel.dismissPhotoDialog()
+                },
+                onDismiss = {
+                    mapViewModel.dismissPhotoDialog()
+                }
+            )
+        }
     }
 
     if (mapViewModel.showSightingDialog.value) {
@@ -312,20 +327,6 @@ fun AddSightingButton(
             }
         }
     )
-    //
-    // When we take a picture
-    if (mapViewModel.showPhotoDialog.value) {
-        PhotoPreviewDialog(
-            photoUri = mapViewModel.imageUri.value!!,
-            onConfirm = {
-                mapViewModel.dismissPhotoDialog()
-            },
-            onDismiss = {
-                mapViewModel.dismissPhotoDialog()
-            }
-        )
-    }
-
 
     Box(
         modifier = Modifier.wrapContentSize(),

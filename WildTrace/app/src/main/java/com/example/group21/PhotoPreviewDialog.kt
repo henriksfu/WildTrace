@@ -2,19 +2,28 @@ package com.example.group21
 
 
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +41,46 @@ fun PhotoPreviewDialog(
     photoUri: Uri,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x80000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(
+                model = photoUri,
+                contentDescription = "Preview of photo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ProfileButton("Back", 1f, onDismiss)
+                Spacer(modifier = Modifier.padding(24.dp))
+                ProfileButton("Create", 1f, onConfirm)
+            }
+        }
+    }
+}
+
+
+/*
+@Composable
+fun PhotoPreviewDialog(
+    photoUri: Uri,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     AlertDialog(
@@ -42,9 +91,7 @@ fun PhotoPreviewDialog(
                 model = photoUri,
                 contentDescription = "Preview of photo",
                 modifier = modifier
-                    .fillMaxHeight(0.8f)
-                    .fillMaxHeight(0.5f)
-
+                    .fillMaxWidth(0.8f)
             )
         },
         confirmButton = {
@@ -59,6 +106,7 @@ fun PhotoPreviewDialog(
         }
     )
 }
+*/
 
 @Composable
 fun SightingDisplayDialog(
@@ -66,7 +114,6 @@ fun SightingDisplayDialog(
     onDismiss: () -> Unit,
     sighting: SightingMarker,
 ) {
-    // TODO use date and time from sighting
     val currentDateTime = Date()
 
 
@@ -96,7 +143,7 @@ fun SightingDisplayDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Comment:",
+                    text = "Comment afaje;afj:",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )

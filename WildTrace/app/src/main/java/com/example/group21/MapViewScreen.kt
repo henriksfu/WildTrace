@@ -61,7 +61,9 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import com.example.group21.database.SightingViewModel
 
 val vancouver = LatLng(49.2827, -123.1207)
@@ -113,25 +115,11 @@ fun MapViewScreen(
         }
     }
 
-
-    if (mapViewModel.showSightingDialog.value) {
-        SightingDisplayDialog(
-            onConfirm = {
-                mapViewModel.dismissSightingDialog()
-            },
-            onDismiss = {
-                mapViewModel.dismissSightingDialog()
-            },
-            sighting = mapViewModel.sightingMarker.value!!
-        )
-    }
-
-
-
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
     )
     var clickedPoint by remember {mutableStateOf<LatLng?>(null)}
+
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -285,6 +273,23 @@ fun MapViewScreen(
             }
         }
     }
+
+    if (mapViewModel.showSightingDialog.value) {
+        Popup(
+            alignment = Alignment.Center,
+            onDismissRequest = { mapViewModel.dismissSightingDialog() }
+        ) {
+            SightingDisplayDialog(
+                onConfirm = {
+                    mapViewModel.dismissSightingDialog()
+                },
+                onDismiss = {
+                    mapViewModel.dismissSightingDialog()
+                },
+                sighting = mapViewModel.sightingMarker.value!!
+            )
+        }
+    }
 }
 
 @Composable
@@ -313,7 +318,7 @@ fun AddSightingButton(
         }
     )
     //
-    // When
+    // When we take a picture
     if (mapViewModel.showPhotoDialog.value) {
         PhotoPreviewDialog(
             photoUri = mapViewModel.imageUri.value!!,

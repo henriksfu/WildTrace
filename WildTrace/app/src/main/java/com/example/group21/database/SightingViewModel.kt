@@ -44,10 +44,31 @@ class SightingViewModel(
             }
         }
     }
+
     //
     // Takes a document ID
     // removes the sighting from the database
     // and from the livedata (to trigger observer changes)
+    fun loadFilteredSightings(pattern: String) {
+        viewModelScope.launch {
+            Log.i("sighting", "Calling repo.getAllSightings()")
+            val list = repository.getAllSightings()
+            if( pattern == "" ){
+                _allSightings.value = list.sortedByDescending { it.createdAt?.seconds }
+            }
+            else {
+                _allSightings.value = list.filter {
+                    it.animalName.lowercase().contains(pattern) || it.notes.lowercase().contains(pattern)
+                }.sortedByDescending { it.createdAt?.seconds }
+            }
+            if( _allSightings.value != null) {
+                for (item in _allSightings.value!!) {
+                    Log.d("Sighting", item.toString())
+                }
+            }
+        }
+    }
+
     fun deleteSighting(documentId: String) {
         //
         // remove from livedata
@@ -70,16 +91,6 @@ class SightingViewModel(
     // Called from the search view
     // filters the livedata to only entries whose names or comments include this
     // If there is no filter, get all of the entries
-    fun filterLiveData(pattern: String){
-        if( pattern == "" ){
-            loadAllSightings()
-        }
-        else {
-            _allSightings.value = _allSightings.value?.filter {
-                it.animalName.lowercase().contains(pattern) || it.notes.lowercase().contains(pattern)
-            }?.sortedByDescending { it.createdAt?.seconds }
-        }
-    }
 
     fun deleteAllSightings(userId: String) {
         viewModelScope.launch {

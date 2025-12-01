@@ -142,7 +142,7 @@ fun SearchView(
                     filtersShown = true
                 })
                 SearchButtonWithIcon("Search", 1f, "Search", {
-                    sightingViewModel.filterLiveData(query)
+                    sightingViewModel.loadFilteredSightings(query)
                 })
             }
             SearchButton("Wipe Sightings", 1f, {

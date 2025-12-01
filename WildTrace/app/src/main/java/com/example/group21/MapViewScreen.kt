@@ -95,6 +95,7 @@ fun MapViewScreen(
     //
     // Observe all sightings
     val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
+    val markerBorderColor = MaterialTheme.colorScheme.onSurface
     //
     // On launch
     LaunchedEffect(allSightings) {
@@ -105,16 +106,14 @@ fun MapViewScreen(
         // Is there anything to do?
         if( allSightings.isEmpty() ) return@LaunchedEffect
         //
-        val markerWidth = with(density) { 72.dp.roundToPx() }
-        val markerHeight = with(density) { 92.dp.roundToPx() }
-        //
         // Create a marker for each sighting
         for ( sighting in allSightings ){
             //
             // Get the bitmap for the custom marker
             val bitmap = createSightingMarkerBitmap(
                 context = context,
-                imageUrl =  sighting.photoUrl
+                imageUrl =  sighting.photoUrl,
+                color = markerBorderColor
             )
             //
             // Convert it into a bitmap descriptor
@@ -173,7 +172,7 @@ fun MapViewScreen(
                     state = rememberedMarkerState,
                     title = sightingMarker.sighting.animalName + " Sighting",
                     icon = sightingMarker.thumbnail,
-                    anchor = Offset(0.5f, 0.5f),
+                    anchor = Offset(0.5f, 1f),
                     snippet = "Click to see more detail",
                     visible = sightingMarker.isVisible.value,
                     onClick = {

@@ -112,7 +112,7 @@ fun MapViewScreen(
             // Get the bitmap for the custom marker
             val bitmap = createSightingMarkerBitmap(
                 context = context,
-                imageUrl =  sighting.photoUrl,
+                imageUrl = sighting.photoUrl,
                 color = markerBorderColor
             )
             //

@@ -50,6 +50,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
 import com.example.group21.R
+import com.example.group21.ui.sightingDetail.CardDetailsView
 
 @Composable
 fun SearchView(
@@ -65,6 +66,9 @@ fun SearchView(
     LaunchedEffect(Unit) {
         sightingViewModel.loadAllSightings()
     }
+    //
+    // State so the gridview onclick gets the right sighting
+    var selectedSighting by remember { mutableStateOf<Sighting?>(null) }
     //
     // Needed to save the query for searching
     var query by remember { mutableStateOf("") }
@@ -157,18 +161,31 @@ fun SearchView(
             }
             //
             // Set up the recycler view
-            SightingList(allSightings, 2)
-            //
-            // Back button
-            //SearchButton("Back", 1f, { navController.popBackStack() })
+            SightingList(allSightings, 2, selectedSighting, {
+                item -> selectedSighting = item
+            })
         }
+    }
+    //
+    // Shows the popup when a sighting is clicked on
+    if (selectedSighting != null) {
+        CardDetailsView(
+            sightingViewModel = sightingViewModel,
+            sighting = selectedSighting!!,
+            onDismiss = { selectedSighting = null },
+            showInMap = {
+
+            }
+        )
     }
 }
 
 @Composable
 fun SightingList(
     items: List<Sighting>,
-    columns: Int = 2
+    columns: Int = 2,
+    selectedSighting: Sighting?,
+    onClick: (Sighting) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
@@ -183,8 +200,8 @@ fun SightingList(
         items(
             items = items,
             key = { it.documentId?: it.hashCode().toString() }
-        ) { item ->
-            SightingCard(item, Modifier, {})
+        ) { s ->
+            SightingCard(s, Modifier, { onClick(s) } )
         }
     }
 }
@@ -278,34 +295,11 @@ fun SearchButton(text: String, alpha: Float, onClick: () -> Unit) {
     }
 }
 
-// Reusable card for each search result
-
-/*
-@Composable
-fun SightingCard(
-    sighting: Sighting,
-    modifier: Modifier,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text(text = sighting.animalName)
-        }
-    }
-}
-*/
-
 @Composable
 fun SightingCard(
     sighting: Sighting,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     //
     //  Make date string to display

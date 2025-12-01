@@ -75,7 +75,9 @@ class MapViewModel( ) : ViewModel() {
 
     fun showSightingDialog(sightingID: String){
         sightingMarker.value = _markers.find { it.sighting.documentId == sightingID }
-        _showSightingDialog.value = true
+        if(sightingMarker.value != null) {
+            _showSightingDialog.value = true
+        }
     }
 
     fun dismissSightingDialog() {
@@ -101,23 +103,6 @@ class MapViewModel( ) : ViewModel() {
         for (marker in _markers ){
             marker.isVisible.value = !marker.isVisible.value
         }
-    }
-    fun randomSighting(currentPosition: LatLng): LatLng {
-        if (markers.size <= 1){
-            return currentPosition
-        }
-        var marker = _markers.random()
-        val maxIters = 10
-        var iters = 0
-        val tol = 0.00001
-        while (abs(marker.state.position.latitude - currentPosition.latitude) < tol
-            && abs(marker.state.position.longitude - currentPosition.longitude) < tol
-            && iters < maxIters ){
-                marker = _markers.random()
-                iters++
-        }
-        marker.state.showInfoWindow()
-        return marker.state.position
     }
 
 }

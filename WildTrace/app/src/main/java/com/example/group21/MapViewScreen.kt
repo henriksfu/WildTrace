@@ -138,19 +138,19 @@ fun MapViewScreen(
             }
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
+
+                val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
+
                 Marker(
                     tag = sightingMarker.sighting.documentId,
-                    state = sightingMarker.state,
+                    state = rememberedMarkerState,
                     title = sightingMarker.sighting.animalName + " Sighting",
                     snippet = "Click to see more detail",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
-                        sightingMarker.state.showInfoWindow()
+                        mapViewModel.showSightingDialog(it.tag as String)
                         true
                     },
-                    onInfoWindowClick = {
-                        mapViewModel.showSightingDialog(it.tag as String)
-                    }
                 )
             }
 
@@ -215,31 +215,6 @@ fun MapViewScreen(
                     .padding(8.dp)
             )
         }
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(
-                    start = 16.dp,
-                    top = 16.dp,
-                    end = 16.dp,
-                    bottom = 100.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            val maxWidth = 180.dp
-            Button(onClick = {
-                navController.
-                navigate("sighting/${cameraPositionState.position.target.latitude}/${cameraPositionState.position.target.longitude}")
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Create New Sighting at Current Location",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
         //
         // When triggered, show the photo preview dialog
         if (mapViewModel.showPhotoDialog.value) {
@@ -259,7 +234,6 @@ fun MapViewScreen(
 
     if (mapViewModel.showSightingDialog.value) {
         SightingDisplayDialog(
-            sightingViewModel = sightingViewModel,
             sightingMarker = mapViewModel.sightingMarker.value!!,
             onDismiss = {
                 mapViewModel.dismissSightingDialog()

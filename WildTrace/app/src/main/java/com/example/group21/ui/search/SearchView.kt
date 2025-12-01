@@ -183,7 +183,7 @@ fun SightingList(
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier
-            .padding(vertical = 12.dp)
+            .padding(top = 12.dp, bottom = 24.dp)
             .fillMaxSize()
             .heightIn(min = 200.dp, max = 500.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -306,7 +306,7 @@ fun SightingCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
     ) {
         Column(
             modifier = Modifier

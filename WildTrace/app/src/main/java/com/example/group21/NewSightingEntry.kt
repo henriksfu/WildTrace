@@ -299,7 +299,7 @@ fun NewSightingEntry(
                             "",
                             1,
                             GeoPoint(lat?.toDouble() ?: 0.0, lng?.toDouble() ?: 0.0),
-                            "",
+                            comment,
                             imageUri.toString(),
                             FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
                             FirebaseAuth.getInstance().currentUser?.uid ?: "",

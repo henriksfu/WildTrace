@@ -61,6 +61,7 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
@@ -82,23 +83,33 @@ fun MapViewScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
-    val scope = rememberCoroutineScope()
-
+    //
+    // Observe all sightings
+    val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
     //
     // On launch
-    LaunchedEffect(Unit) {
+    LaunchedEffect(allSightings) {
         //
-        // Get the user's location
+        // First, clear the markers
+        mapViewModel.clearMarkers()
+        //
+        // Is there anything to do?
+        if( allSightings.isEmpty() ) return@LaunchedEffect
+        //
+        // Create a marker for each sighting
+        for ( sighting in allSightings ){
+            val lat = sighting.location?.latitude ?: 0.0
+            val lng = sighting.location?.longitude ?: 0.0
+            val latLng = LatLng(lat, lng)
+            mapViewModel.addMarker(latLng, sighting)
+        }
+    }
+    //
+    // get the user's' location and fetch sightings
+    LaunchedEffect(Unit){
         mapViewModel.fetchUserLocation(context)
         Log.d("MAP_SCREEN", "Fetching all sightings...")
         sightingViewModel.loadAllSightings()
-
-        sightingViewModel.allSightings.observeForever { list ->
-            Log.d("MAP_SCREEN", "Got ${list.size} sightings:")
-            list.forEach {
-                Log.d("MAP_SCREEN", "→ ${it.animalName} (${it.count}x) at ${it.location}")
-            }
-        }
     }
 
     var expanded by remember { mutableStateOf(false) }
@@ -128,10 +139,10 @@ fun MapViewScreen(
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
                 Marker(
-                    tag = sightingMarker.id,
+                    tag = sightingMarker.sighting.documentId,
                     state = sightingMarker.state,
-                    title = sightingMarker.title + " Sighting",
-                    snippet = "Click this to see full details",
+                    title = sightingMarker.sighting.animalName + " Sighting",
+                    snippet = "Click to see more detail",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
                         sightingMarker.state.showInfoWindow()
@@ -140,7 +151,6 @@ fun MapViewScreen(
                     onInfoWindowClick = {
                         mapViewModel.showSightingDialog(it.tag as String)
                     }
-
                 )
             }
 
@@ -229,36 +239,6 @@ fun MapViewScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            Button(onClick = {
-                sightingViewModel.loadAllSightings()
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Load All Sightings",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Button(onClick = {
-                scope.launch {
-                    val currentPosition = cameraPositionState.position.target
-                    cameraPositionState.animate(
-                        update = CameraUpdateFactory.newLatLng(
-                            mapViewModel.randomSighting(
-                                currentPosition
-                            )
-                        )
-                    )
-                }
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Go to Random Sighting",
-                    maxLines = Int.MAX_VALUE,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
         }
         //
         // When triggered, show the photo preview dialog
@@ -279,13 +259,11 @@ fun MapViewScreen(
 
     if (mapViewModel.showSightingDialog.value) {
         SightingDisplayDialog(
-            onConfirm = {
-                mapViewModel.dismissSightingDialog()
-            },
+            sightingViewModel = sightingViewModel,
+            sightingMarker = mapViewModel.sightingMarker.value!!,
             onDismiss = {
                 mapViewModel.dismissSightingDialog()
-            },
-            sighting = mapViewModel.sightingMarker.value!!
+            }
         )
     }
 }

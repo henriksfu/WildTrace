@@ -7,7 +7,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.group21.database.Sighting
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -16,19 +19,16 @@ import com.google.maps.android.compose.MarkerState
 import kotlin.math.abs
 
 data class SightingMarker(
-    val id: String,
     val state: MarkerState,
-    val title: String,
     var isVisible: MutableState<Boolean> = mutableStateOf(true),
-    val comment: String,
-    val imageUri: Uri?
+    val sighting: Sighting
 )
 
 class MapViewModel( ) : ViewModel() {
     private val _imageUri = mutableStateOf<Uri?>(null)
     val imageUri: State<Uri?> = _imageUri
     private val _markers = mutableStateListOf<SightingMarker>()
-    val markers: List<SightingMarker> = _markers
+    val markers: List<SightingMarker> get() = _markers
     private val _showSightingDialog = mutableStateOf(false)
     val showSightingDialog: State<Boolean> = _showSightingDialog
     val sightingMarker: MutableState<SightingMarker?> = mutableStateOf(null)
@@ -62,29 +62,6 @@ class MapViewModel( ) : ViewModel() {
         if(showPhotoDialog) showPhotoDialog()
     }
 
-    init {
-       addMarker(
-            LatLng(49.222032865117825, -123.0723162798196),
-            "Dog"
-        )
-        addMarker(
-            LatLng(49.24511450409677, -123.05986998151903),
-            "Cat"
-        )
-        addMarker(
-            LatLng(49.23650974676318, -123.01989096273527),
-            "Bird"
-        )
-        addMarker(
-            LatLng(49.224530359744705, -123.00895330665291),
-            "Bear"
-        )
-        addMarker(
-            LatLng(49.214436959993215, -123.01259919201368),
-            "Raccoon"
-        )
-    }
-
     private val _showPhotoDialog = mutableStateOf(false)
     val showPhotoDialog: State<Boolean> = _showPhotoDialog
 
@@ -97,7 +74,7 @@ class MapViewModel( ) : ViewModel() {
     }
 
     fun showSightingDialog(sightingID: String){
-        sightingMarker.value = _markers.find { it.id == sightingID }
+        sightingMarker.value = _markers.find { it.sighting.documentId == sightingID }
         _showSightingDialog.value = true
     }
 
@@ -106,22 +83,22 @@ class MapViewModel( ) : ViewModel() {
         _showSightingDialog.value = false
     }
 
+    fun clearMarkers() {
+        _markers.forEach { it.state.hideInfoWindow() }
+        _markers.clear()
+    }
 
-    private fun addMarker(position: LatLng, title: String, imageUri: Uri? = null, comment: String = "") {
+    fun addMarker(position: LatLng, sighting: Sighting) {
         val markerState = MarkerState(position = position)
-        markerState.showInfoWindow()
 
         val newMarker = SightingMarker(
-            id = java.util.UUID.randomUUID().toString(),
             state = markerState,
-            title = title,
-            comment = comment,
-            imageUri =imageUri
+            sighting = sighting
         )
         _markers.add(newMarker)
     }
     fun toggleMarkers(){
-        for (marker in _markers){
+        for (marker in _markers ){
             marker.isVisible.value = !marker.isVisible.value
         }
     }

@@ -73,9 +73,6 @@ fun SearchView(
     // Needed to save the query for searching
     var query by remember { mutableStateOf("") }
     //
-    // Collect state from ViewModel
-    var filtersShown by remember { mutableStateOf(false) }
-    //
     // To make the view scrollable
     val scrollState = rememberScrollState()
     //
@@ -137,14 +134,10 @@ fun SearchView(
 
             SearchInput("Search For an Animal", query, { n -> query = n })
 
-            Row() {
-                SearchButtonWithIcon("Filter", 1f, "Filter", {
-                    filtersShown = true
-                })
-                SearchButtonWithIcon("Search", 1f, "Search", {
-                    sightingViewModel.loadFilteredSightings(query)
-                })
-            }
+            SearchButtonWithIcon("Search", 1f, "Search", {
+                sightingViewModel.loadFilteredSightings(query)
+            })
+
             SearchButton("Wipe Sightings", 1f, {
                 sightingViewModel.wipeAllSightings()
             })
@@ -229,7 +222,7 @@ fun SearchInput(
             cursorColor = colorScheme.onBackground
         ),
         modifier = Modifier
-            .fillMaxWidth()
+            .widthIn(min = 500.dp, max = 650.dp)
             .padding(vertical = 16.dp, horizontal = 8.dp)
     )
 }
@@ -253,12 +246,11 @@ fun SearchButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () -
         Icon(
             imageVector =
                 when (icon){
-                    "Filter" -> Icons.Filled.Settings
                     "Search" -> Icons.Filled.Search
                     "Back"   -> Icons.AutoMirrored.Filled.ArrowBack
                     else -> Icons.Filled.QuestionMark
                 },
-            contentDescription = "Button Icon: Filter or Search"
+            contentDescription = "Button Icon: Search"
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(

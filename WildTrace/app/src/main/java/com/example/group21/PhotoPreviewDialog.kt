@@ -32,10 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.group21.database.Sighting
+import com.example.group21.database.SightingViewModel
+import com.example.group21.ui.sightingDetail.dateDisplay
 import java.text.DateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -148,60 +153,57 @@ fun PhotoPreviewDialog(
 
 @Composable
 fun SightingDisplayDialog(
-    onConfirm: () -> Unit,
+    sightingViewModel: SightingViewModel,
+    sightingMarker: SightingMarker,
     onDismiss: () -> Unit,
-    sighting: SightingMarker,
 ) {
-    val currentDateTime = Date()
+    val scrollState = rememberScrollState()
 
+    //
+    // Get the asynchronous image load
+    val imageRequest = ImageRequest.Builder(LocalContext.current)
+        .data(sightingMarker.sighting.photoUrl.takeIf { it.isNotBlank() })
+        .error(R.drawable.image_not_found)
+        .fallback(R.drawable.image_not_found)
+        .build()
 
-    val formatter: DateFormat = DateFormat.getDateTimeInstance(
-        DateFormat.MEDIUM,
-        DateFormat.MEDIUM,
-        Locale.getDefault()
-    )
-    val formattedDateTime: String = formatter.format(currentDateTime)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xD0000000))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.9f)
+                .wrapContentHeight()
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = sighting.title + " - " + formattedDateTime) },
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = "Sighting Photo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 500.dp)
+                    .padding(bottom = 16.dp),
+                contentScale = ContentScale.Fit
+            )
 
-        text = {
-            Column {
-                AsyncImage(
-                    model = sighting.imageUri,
-                    contentDescription = "Sighting Photo",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .heightIn(max = 300.dp)
-                )
+            dateDisplay()
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = sightingMarker.sighting.notes,
+                color = Color.White,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(vertical = 16.dp),
+            )
 
-                Text(
-                    text = "Comment afaje;afj:",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = sighting.comment,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm()
-            }) {
-                Text("Cancel")
-            }
-        },
-
-
-    )
+            PreviewButton("Back", 1f, onDismiss)
+        }
+    }
 }

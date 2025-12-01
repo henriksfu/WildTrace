@@ -188,21 +188,7 @@ fun MapViewScreen(
                 )
                 //
                 // For Searching entries
-                FloatingActionButton(
-                    onClick = { /* TODO */ },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search for Sightings",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
-                }
+                SearchButton(navController)
             }
 
             // Instruction text below the button
@@ -280,6 +266,8 @@ fun MapViewScreen(
             PhotoPreviewDialog(
                 photoUri = mapViewModel.imageUri.value!!,
                 onConfirm = {
+                    //
+                    // TODO API call to analyze image
                     mapViewModel.dismissPhotoDialog()
                 },
                 onDismiss = {
@@ -302,6 +290,29 @@ fun MapViewScreen(
     }
 }
 
+@Composable
+fun SearchButton(navController: NavController){
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    FloatingActionButton(
+        onClick = {
+            navController.navigate("search")
+        },
+        containerColor = colorScheme.background,
+        contentColor = colorScheme.onBackground,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .size(width = 90.dp, height = 90.dp)
+            .padding(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Search,
+            contentDescription = "Search for Sightings",
+            modifier = Modifier.fillMaxSize(0.5f)
+        )
+    }
+}
 @Composable
 //
 // This button hides two smaller popouts that let the user select "manual" entry or "automatic" entry

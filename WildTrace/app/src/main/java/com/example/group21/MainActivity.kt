@@ -108,31 +108,27 @@ fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = "map",
-        route = "authentication_graph"
+        route = "graph"
     ) {
 
         // --- Reid's Screens ---
         composable("login") { backStackEntry ->
-            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authEntry = navController.getBackStackEntry("graph")
             val authViewModel: AuthViewModel = viewModel(authEntry)
             LoginView(navController, authViewModel)
         }
 
         composable("signup") { backStackEntry ->
-            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authEntry = navController.getBackStackEntry("graph")
             val authViewModel: AuthViewModel = viewModel(authEntry)
             SignupView(navController, authViewModel)
         }
-        composable("profile") {
-            ProfileView(navController)
-        }
-
-        // --- Map Screen ---
+        
         composable("map") { backStackEntry ->
 
             // ViewModels scoped to this NavGraph level
 
-            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val graphEntry = navController.getBackStackEntry("graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
@@ -163,7 +159,7 @@ fun AppNavigation(navController: NavHostController) {
         ) { backStackEntry ->
             //
             // make sure its same viewmodel instances
-            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val graphEntry = navController.getBackStackEntry("graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
@@ -179,8 +175,10 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        composable("search") {
-            SearchView()
+        composable("search") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("graph")
+            val sightingViewModel: SightingViewModel = viewModel(authEntry)
+            SearchView(navController, sightingViewModel, {})
         }
 
         composable("sightingDetail") {

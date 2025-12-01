@@ -14,12 +14,14 @@ import com.example.group21.database.Sighting
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
 import kotlin.math.abs
 
 data class SightingMarker(
     val state: MarkerState,
+    val thumbnail: BitmapDescriptor,
     var isVisible: MutableState<Boolean> = mutableStateOf(true),
     val sighting: Sighting
 )
@@ -90,11 +92,12 @@ class MapViewModel( ) : ViewModel() {
         _markers.clear()
     }
 
-    fun addMarker(position: LatLng, sighting: Sighting) {
+    fun addMarker(position: LatLng, sighting: Sighting, thumbnail: BitmapDescriptor) {
         val markerState = MarkerState(position = position)
 
         val newMarker = SightingMarker(
             state = markerState,
+            thumbnail = thumbnail,
             sighting = sighting
         )
         _markers.add(newMarker)

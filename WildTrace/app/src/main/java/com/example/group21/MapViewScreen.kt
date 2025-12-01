@@ -61,11 +61,16 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCompositionContext
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.example.group21.database.SightingViewModel
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 val vancouver = LatLng(49.2827, -123.1207)
 @Composable
@@ -76,7 +81,11 @@ fun MapViewScreen(
     sightingViewModel: SightingViewModel
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val userLocation by mapViewModel.userLocation
+    //
+    // Get context for the bitmap conversion
+    val compositionContext = rememberCompositionContext()
     //
     // Default location in case can't find the user's
     val location = userLocation ?: vancouver
@@ -96,12 +105,28 @@ fun MapViewScreen(
         // Is there anything to do?
         if( allSightings.isEmpty() ) return@LaunchedEffect
         //
+        val markerWidth = with(density) { 72.dp.roundToPx() }
+        val markerHeight = with(density) { 92.dp.roundToPx() }
+        //
         // Create a marker for each sighting
         for ( sighting in allSightings ){
+            //
+            // Get the bitmap for the custom marker
+            val bitmap = createSightingMarkerBitmap(
+                context = context,
+                imageUrl =  sighting.photoUrl
+            )
+            //
+            // Convert it into a bitmap descriptor
+            val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
+            //
+            // Add the marker
             val lat = sighting.location?.latitude ?: 0.0
             val lng = sighting.location?.longitude ?: 0.0
             val latLng = LatLng(lat, lng)
-            mapViewModel.addMarker(latLng, sighting)
+            //val debugIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+            //mapViewModel.addMarker(latLng, sighting, debugIcon)
+            mapViewModel.addMarker(latLng, sighting, descriptor)
         }
     }
     //
@@ -139,12 +164,16 @@ fun MapViewScreen(
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
 
+                Log.e("MAP_MARKERS", "Rendering ${mapViewModel.markers.size} markers")
+
                 val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
 
                 Marker(
                     tag = sightingMarker.sighting.documentId,
                     state = rememberedMarkerState,
                     title = sightingMarker.sighting.animalName + " Sighting",
+                    icon = sightingMarker.thumbnail,
+                    anchor = Offset(0.5f, 0.5f),
                     snippet = "Click to see more detail",
                     visible = sightingMarker.isVisible.value,
                     onClick = {

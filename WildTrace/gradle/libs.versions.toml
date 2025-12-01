@@ -13,6 +13,7 @@ playServicesLocation = "21.3.0"
 firebaseFirestoreKtx = "26.0.2"
 runtimeLivedata = "1.9.5"
 firebaseStorageKtx = "22.0.1"
+ui = "1.9.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +34,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

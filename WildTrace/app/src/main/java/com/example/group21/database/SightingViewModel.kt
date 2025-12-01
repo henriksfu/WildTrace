@@ -4,8 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.launch
 
 class SightingViewModel(
@@ -13,8 +11,7 @@ class SightingViewModel(
 ) : ViewModel() {
 
     fun saveSighting(sighting: Sighting) {
-        //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //for authentication
-
+        //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //Authentication is instead done by caller
         viewModelScope.launch {
             Log.i("sighting","Calling repo.saveSighting")
             repository.addSighting(sighting)
@@ -40,6 +37,42 @@ class SightingViewModel(
                     Log.d("Sighting", item.toString())
                 }
             }
+        }
+    }
+
+    fun deleteSighting(documentId: String) {
+        viewModelScope.launch {
+            repository.deleteSighting(documentId)
+                .onSuccess {
+                    Log.d("SightingViewModel", "Sighting deleted: $documentId")
+                }
+                .onFailure {
+                    Log.e("SightingViewModel", "Delete failed", it)
+                }
+        }
+    }
+
+    fun deleteAllSightings(userId: String) {
+        viewModelScope.launch {
+            repository.deleteAllSightings(userId)
+                .onSuccess {
+                    Log.d("SightingViewModel", "All sightings deleted for user $userId")
+                }
+                .onFailure {
+                    Log.e("SightingViewModel", "Failed to delete user sightings", it)
+                }
+        }
+    }
+
+    fun wipeAllSightings() {
+        viewModelScope.launch {
+            repository.wipeAllSightings()
+                .onSuccess {
+                    Log.w("SightingViewModel", "ALL sightings wiped by admin")
+                }
+                .onFailure {
+                    Log.e("SightingViewModel", "Admin wipe failed", it)
+                }
         }
     }
 }

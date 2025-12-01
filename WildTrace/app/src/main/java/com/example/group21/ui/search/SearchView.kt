@@ -1,40 +1,33 @@
 package com.example.group21.ui.search.searchView
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -42,18 +35,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.group21.EntryButtonWithIcon
-import com.example.group21.createImageFile
+import coil.compose.rememberAsyncImagePainter
 import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.GeoPoint
+import com.example.group21.R
 
 @Composable
 fun SearchView(
@@ -65,74 +61,130 @@ fun SearchView(
     // all sightings state from viewModel
     val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
     //
+    // Start loading the sightings
+    LaunchedEffect(Unit) {
+        sightingViewModel.loadAllSightings()
+    }
+    //
     // Needed to save the query for searching
     var query by remember { mutableStateOf("") }
     //
     // Collect state from ViewModel
     var filtersShown by remember { mutableStateOf(false) }
+    //
+    // To make the view scrollable
+    val scrollState = rememberScrollState()
+    //
+    // Some test sightings
+    val cat = Sighting(
+        "cat",
+        "scientific cat",
+        1,
+        GeoPoint(0.0, 0.0),
+        "note",
+        "",
+        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
+        FirebaseAuth.getInstance().currentUser?.uid ?: "",
+        Timestamp.now()
+    )
+    val bat = Sighting(
+        "bat",
+        "scientific bat",
+        1,
+        GeoPoint(0.0, 0.0),
+        "note",
+        "",
+        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
+        FirebaseAuth.getInstance().currentUser?.uid ?: "",
+        Timestamp.now()
+    )
+    val rat = Sighting(
+        "rat",
+        "scientific rat",
+        1,
+        GeoPoint(0.0, 0.0),
+        "note",
+        "",
+        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
+        FirebaseAuth.getInstance().currentUser?.uid ?: "",
+        Timestamp.now()
+    )
 
-    Column(
+    Box(
         modifier = Modifier
-            .padding(vertical = 24.dp, horizontal = 16.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(vertical = 12.dp, horizontal = 8.dp)
     ) {
-
-        Text(
-            text = "Search",
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 28.sp,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
-
-        SearchInput("Search For an Animal", query, {n -> query = n})
-
-        Row(
-            modifier = Modifier.padding(horizontal = 5.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Top),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SearchButtonWithIcon("Filter", 1f, "Filter", {
-                filtersShown = true
-            })
-            SearchButtonWithIcon("Search", 1f, "Search", {
 
+            Text(
+                text = "Search",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 28.sp,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+
+            SearchInput("Search For an Animal", query, { n -> query = n })
+
+            Row() {
+                SearchButtonWithIcon("Filter", 1f, "Filter", {
+                    filtersShown = true
+                })
+                SearchButtonWithIcon("Search", 1f, "Search", {
+                    sightingViewModel.filterLiveData(query)
+                })
+            }
+            SearchButton("Wipe Sightings", 1f, {
+                sightingViewModel.wipeAllSightings()
             })
+            Row() {
+                SearchButton("Cat", 1f,  {
+                    sightingViewModel.saveSighting(cat)
+                })
+                SearchButton("Bat", 1f,  {
+                    sightingViewModel.saveSighting(bat)
+                })
+                SearchButton("Rat", 1f,  {
+                    sightingViewModel.saveSighting(rat)
+                })
+            }
+            //
+            // Set up the recycler view
+            SightingList(allSightings, 2)
+            //
+            // Back button
+            //SearchButton("Back", 1f, { navController.popBackStack() })
         }
-
-        Text(
-            text = "All Sightings",
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-        //
-        // Set up the recycler view
-        SightingList(allSightings, 4)
-        //
-        // Back button
-        SearchButton("Back", 1f,{navController.popBackStack()})
     }
 }
 
 @Composable
 fun SightingList(
     items: List<Sighting>,
-    columns: Int = 4
+    columns: Int = 2
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier
+            .padding(vertical = 12.dp)
             .fillMaxSize()
-            .background(Color.Blue)
-            .heightIn(min = 200.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .heightIn(min = 200.dp, max = 500.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(8.dp)
     ) {
         items(
             items = items,
-            key = { index -> index }
+            key = { it.documentId?: it.hashCode().toString() }
         ) { item ->
-            SightingCard(item, {})
+            SightingCard(item, Modifier, {})
         }
     }
 }
@@ -186,6 +238,7 @@ fun SearchButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () -
                 when (icon){
                     "Filter" -> Icons.Filled.Settings
                     "Search" -> Icons.Filled.Search
+                    "Back"   -> Icons.AutoMirrored.Filled.ArrowBack
                     else -> Icons.Filled.QuestionMark
                 },
             contentDescription = "Button Icon: Filter or Search"
@@ -226,21 +279,88 @@ fun SearchButton(text: String, alpha: Float, onClick: () -> Unit) {
 }
 
 // Reusable card for each search result
+
+/*
 @Composable
 fun SightingCard(
     sighting: Sighting,
+    modifier: Modifier,
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             Text(text = sighting.animalName)
+        }
+    }
+}
+*/
+
+@Composable
+fun SightingCard(
+    sighting: Sighting,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    //
+    //  Make date string to display
+    val date = if (sighting.createdAt==null) java.util.Date() else sighting.createdAt.toDate()
+    val formatter = java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault())
+    val displayDate = formatter.format(date)
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            val painter = rememberAsyncImagePainter(
+                model = sighting.photoUrl.ifBlank { R.drawable.image_not_found },
+                error = painterResource(R.drawable.image_not_found)
+            )
+            Image(
+                painter = painter,
+                contentDescription = sighting.animalName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = sighting.animalName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = displayDate,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.DarkGray
+                )
+            }
         }
     }
 }

@@ -12,7 +12,17 @@ class SightingRepository {
     suspend fun addSighting(sighting: Sighting): Result<String> = try {
         //val currentUser = auth.currentUser
         //?: return Result.failure(Exception("User not logged in"))
-
+        /*
+        val storageRef = FirebaseStorage.getInstance().reference
+        val imageRef = storageRef.child("sightings/${UUID.randomUUID()}.jpg")
+        imageRef.putFile(localUri)
+            .addOnSuccessListener {
+                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                    val downloadUrl = uri.toString()
+                    // Save a new Sighting with this download URL
+                }
+            }
+        */
         val documentRef = sightingsRef.add(sighting).await()
 
         Log.d("SightingRepository", "Sighting saved successfully! ID: ${documentRef.id}")

@@ -97,6 +97,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.firebase.storage.ktx)
 
 
     // --- Debug/Testing tools ---
@@ -113,5 +114,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+    //implementation("com.google.firebase:firebase-storage-ktx:21.3.0")
 
 }

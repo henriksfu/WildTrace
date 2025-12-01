@@ -12,6 +12,11 @@ class SightingViewModel(
 
     fun saveSighting(sighting: Sighting) {
         //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //Authentication is instead done by caller
+        //
+        // Add to the livedata
+        _allSightings.value = (_allSightings.value ?: emptyList()) + sighting
+        //
+        // Save to the database
         viewModelScope.launch {
             Log.i("sighting","Calling repo.saveSighting")
             repository.addSighting(sighting)
@@ -24,14 +29,14 @@ class SightingViewModel(
         }
     }
 
-    private val _allSightings = MutableLiveData<List<Sighting>>() //private real data
-    val allSightings: LiveData<List<Sighting>> = _allSightings //public fake data
+    private val _allSightings = MutableLiveData<List<Sighting>>()
+    val allSightings: LiveData<List<Sighting>> = _allSightings
 
     fun loadAllSightings() {
         viewModelScope.launch {
             Log.i("sighting", "Calling repo.getAllSightings()")
             val list = repository.getAllSightings()
-            _allSightings.value = list
+            _allSightings.value = list.sortedByDescending { it.createdAt?.seconds }
             if( _allSightings.value != null) {
                 for (item in _allSightings.value!!) {
                     Log.d("Sighting", item.toString())
@@ -39,8 +44,18 @@ class SightingViewModel(
             }
         }
     }
-
+    //
+    // Takes a document ID
+    // removes the sighting from the database
+    // and from the livedata (to trigger observer changes)
     fun deleteSighting(documentId: String) {
+        //
+        // remove from livedata
+        _allSightings.value = _allSightings.value?.filter {
+            it.documentId != documentId
+        }?.sortedByDescending { it.createdAt?.seconds }
+        //
+        // Delete from the database
         viewModelScope.launch {
             repository.deleteSighting(documentId)
                 .onSuccess {
@@ -49,6 +64,20 @@ class SightingViewModel(
                 .onFailure {
                     Log.e("SightingViewModel", "Delete failed", it)
                 }
+        }
+    }
+    //
+    // Called from the search view
+    // filters the livedata to only entries whose names or comments include this
+    // If there is no filter, get all of the entries
+    fun filterLiveData(pattern: String){
+        if( pattern == "" ){
+            loadAllSightings()
+        }
+        else {
+            _allSightings.value = _allSightings.value?.filter {
+                it.animalName.lowercase().contains(pattern) || it.notes.lowercase().contains(pattern)
+            }?.sortedByDescending { it.createdAt?.seconds }
         }
     }
 
@@ -65,6 +94,11 @@ class SightingViewModel(
     }
 
     fun wipeAllSightings() {
+        //
+        // clear the livedata
+        _allSightings.value = emptyList<Sighting>()
+        //
+        // Clear all sightings from the database
         viewModelScope.launch {
             repository.wipeAllSightings()
                 .onSuccess {

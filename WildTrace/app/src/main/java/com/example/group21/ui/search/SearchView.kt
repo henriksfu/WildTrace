@@ -1,18 +1,26 @@
 package com.example.group21.ui.search.searchView
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,22 +30,29 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.group21.EntryButtonWithIcon
+import com.example.group21.createImageFile
+import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
 
 @Composable
@@ -46,9 +61,15 @@ fun SearchView(
     sightingViewModel: SightingViewModel,
     onResultClick: (String) -> Unit = {} // needed for navigation to detail later
 ) {
+    //
+    // all sightings state from viewModel
+    val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
+    //
+    // Needed to save the query for searching
     var query by remember { mutableStateOf("") }
     //
     // Collect state from ViewModel
+    var filtersShown by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -65,45 +86,61 @@ fun SearchView(
             modifier = Modifier.padding(vertical = 16.dp),
         )
 
+        SearchInput("Search For an Animal", query, {n -> query = n})
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(horizontal = 5.dp)
         ) {
-            SearchInput("Search For an Animal", query, {
-                new -> query = new
+            SearchButtonWithIcon("Filter", 1f, "Filter", {
+                filtersShown = true
             })
-            FilterButton(navController, {}, Modifier.weight(0.2f))
+            SearchButtonWithIcon("Search", 1f, "Search", {
+
+            })
+        }
+
+        Text(
+            text = "All Sightings",
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        //
+        // Set up the recycler view
+        SightingList(allSightings, 4)
+        //
+        // Back button
+        SearchButton("Back", 1f,{navController.popBackStack()})
+    }
+}
+
+@Composable
+fun SightingList(
+    items: List<Sighting>,
+    columns: Int = 4
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columns),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Blue)
+            .heightIn(min = 200.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(8.dp)
+    ) {
+        items(
+            items = items,
+            key = { index -> index }
+        ) { item ->
+            SightingCard(item, {})
         }
     }
 }
 
 @Composable
-fun FilterButton(
-    navController: NavController,
-    onClick: () -> Unit,
-    modifier: Modifier,){
-
-    val colorScheme = MaterialTheme.colorScheme
-
-    FloatingActionButton(
-        onClick = onClick,
-        containerColor = colorScheme.background,
-        contentColor = colorScheme.onBackground,
-        shape = RoundedCornerShape(20.dp),
-        modifier = modifier
-            .padding(4.dp)
-            .aspectRatio(1f)
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Settings,
-            contentDescription = "Filter Results",
-            modifier = Modifier.fillMaxSize(0.5f)
-        )
-    }
-}
-
-@Composable
-fun SearchInput(labelText: String, text: String, onChange: (String) -> Unit) {
+fun SearchInput(
+    labelText: String,
+    text: String, onChange: (String) -> Unit) {
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -123,15 +160,75 @@ fun SearchInput(labelText: String, text: String, onChange: (String) -> Unit) {
             cursorColor = colorScheme.onBackground
         ),
         modifier = Modifier
-            .padding(4.dp)
-            .fillMaxWidth(0.75f)
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 8.dp)
     )
+}
+
+@Composable
+fun SearchButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight()
+            .padding(4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
+            contentColor = colorScheme.onBackground,
+        ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Icon(
+            imageVector =
+                when (icon){
+                    "Filter" -> Icons.Filled.Settings
+                    "Search" -> Icons.Filled.Search
+                    else -> Icons.Filled.QuestionMark
+                },
+            contentDescription = "Button Icon: Filter or Search"
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            modifier = Modifier.padding(4.dp),
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
+fun SearchButton(text: String, alpha: Float, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight()
+            .padding(4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.tertiary.copy(alpha=alpha),
+            contentColor = colorScheme.onBackground,
+        ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(4.dp),
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
 }
 
 // Reusable card for each search result
 @Composable
-fun SearchResultCard(
-    title: String,
+fun SightingCard(
+    sighting: Sighting,
     onClick: () -> Unit
 ) {
     Card(
@@ -143,7 +240,7 @@ fun SearchResultCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = title)
+            Text(text = sighting.animalName)
         }
     }
 }

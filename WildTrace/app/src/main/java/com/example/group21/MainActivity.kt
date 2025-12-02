@@ -170,7 +170,7 @@ fun AppNavigation(navController: NavHostController) {
 
         // --- New Sighting Screen (Conflict Resolved) ---
         composable(
-            route = "sighting/{latitude}/{longitude}/{animalName}/{comment}/{date}/{time}/{imageUri}",
+            route = "sighting/{latitude}/{longitude}/{animalName}/{comment}/{date}/{time}",
             arguments = listOf(
                 navArgument("latitude") { type = NavType.FloatType },
                 navArgument("longitude") { type = NavType.FloatType },
@@ -196,7 +196,6 @@ fun AppNavigation(navController: NavHostController) {
         ) { backStackEntry ->
             // make sure its same viewmodel instances
             val graphEntry = navController.getBackStackEntry("graph")
-            val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
             val latitude = backStackEntry.arguments?.getFloat("latitude")
@@ -217,7 +216,6 @@ fun AppNavigation(navController: NavHostController) {
                 inComment = comment?:"",
                 inDate = date?:-1L,
                 inTime = time?:-1L,
-                savedUri = imageUri,
                 sightingViewModel = sightingViewModel,
             )
         }

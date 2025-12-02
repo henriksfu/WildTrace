@@ -43,7 +43,6 @@ fun SightingDetailView(
     comment: String,
     date: Long,
     time: Long
-
 ) {
     //
     // to make scrollable
@@ -95,7 +94,7 @@ fun SightingDetailView(
             ) {
                 Button(
                     onClick = {
-                        navController.navigate("sighting/${latitude}/${longitude}/${animalName}/${comment}/${date}/${time}/${""}")
+                        navController.navigate("sighting/${latitude}/${longitude}/${animalName}/${comment}/${date}/${time}")
                     },
                     modifier = Modifier
                         .padding(8.dp),
@@ -105,7 +104,7 @@ fun SightingDetailView(
                 }
                 Button(
                     onClick = {
-                        navController.navigate("sighting/${latitude}/${longitude}/${animalName}/${comment}/${date}/${time}/${""}")
+                        navController.navigate("sighting/${latitude}/${longitude}/${viewModel.animalName}/${comment}/${date}/${time}")
                     },
                     modifier = Modifier
                         .padding(8.dp),

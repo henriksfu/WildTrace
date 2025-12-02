@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -170,14 +171,17 @@ fun NewSightingEntry(
     inComment: String,
     inDate: Long,
     inTime: Long,
-    savedUri: Uri?,
     sightingViewModel: SightingViewModel,
 ) {
     var animalName by rememberSaveable { mutableStateOf(inAnimalName) } // Kept remote naming
     var errorMsg by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf(inComment) }
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    //if(savedUri != null) imageUri = savedUri
+    //
+    // Is there a saved Uri from the AI screen?
+    if(ImageHolder.capturedUri != null){
+        imageUri = ImageHolder.capturedUri
+    }
     val context = LocalContext.current
     var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     if(inDate != -1L) selectedDateMillis = inDate

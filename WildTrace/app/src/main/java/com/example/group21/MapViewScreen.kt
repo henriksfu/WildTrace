@@ -337,7 +337,7 @@ fun AddSightingButton(
                 onExpandedChange(false)
                 val lat = userLocation?.latitude ?: vancouver.latitude
                 val lng = userLocation?.longitude ?: vancouver.longitude
-                navController.navigate("sighting/${lat}/${lng}/${""}/${""}/${-1L}/${-1L}/${""}")
+                navController.navigate("sighting/${lat}/${lng}/${""}/${""}/${-1L}/${-1L}")
             },
             containerColor = colorScheme.background,
             contentColor = colorScheme.onBackground,

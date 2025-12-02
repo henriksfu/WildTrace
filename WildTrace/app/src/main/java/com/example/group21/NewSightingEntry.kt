@@ -200,7 +200,6 @@ fun NewSightingEntry(
         onResult = { success ->
             if (success) {
                 imageUri = tempUri
-                mapViewModel.setImageUri(imageUri!!)
             }
         }
     )
@@ -212,7 +211,6 @@ fun NewSightingEntry(
         onResult = { uri: Uri? ->
             if (uri != null) {
                 imageUri = uri
-                mapViewModel.setImageUri(uri)
             }
         }
     )

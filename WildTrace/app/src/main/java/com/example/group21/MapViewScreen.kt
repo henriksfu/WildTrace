@@ -101,33 +101,30 @@ fun MapViewScreen(
     // On launch
     LaunchedEffect(allSightings) {
         mapViewModel.clearMarkers()
-
+        //
         if (allSightings.isEmpty()) return@LaunchedEffect
-
-        // Launch all marker loads in parallel
+        //
+        // Launch all marker loads in parallel so it doesn't take a million years
         val markerJobs = allSightings.map { sighting ->
             async(Dispatchers.IO) {
                 val latLng = LatLng(
                     sighting.location?.latitude ?: 0.0,
                     sighting.location?.longitude ?: 0.0
                 )
-
                 val bitmap = createSightingMarkerBitmap(
                     context = context,
                     imageUrl = sighting.photoUrl,
                     color = markerBorderColor
                 )
-
                 val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
-
                 Pair(latLng, sighting to descriptor)
             }
         }
-
-        // Wait for everything to finish
+        //
+        // Wait for all the bitmap processing stuff
         val results = markerJobs.awaitAll()
-
-        // Add them all at once
+        //
+        // Add the markers that were generated to the list
         results.forEach { (latLng, pair) ->
             val (sighting, descriptor) = pair
             mapViewModel.addMarker(latLng, sighting, descriptor)

@@ -1,4 +1,5 @@
 package com.example.group21.database
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,7 +11,7 @@ class SightingViewModel(
     private val repository: SightingRepository = SightingRepository()
 ) : ViewModel() {
 
-    fun saveSighting(sighting: Sighting) {
+    fun saveSighting(localImageUri: Uri, sighting: Sighting) {
         //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //Authentication is instead done by caller
         //
         // Add to the livedata
@@ -19,7 +20,7 @@ class SightingViewModel(
         // Save to the database
         viewModelScope.launch {
             Log.i("sighting","Calling repo.saveSighting")
-            repository.addSighting(sighting)
+            repository.addSighting(localImageUri, sighting)
                 .onSuccess { docId ->
                     println("Sighting saved with ID: $docId")
                 }

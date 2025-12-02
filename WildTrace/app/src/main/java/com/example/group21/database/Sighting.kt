@@ -18,6 +18,7 @@ data class Sighting(
     @ServerTimestamp
     val createdAt: Timestamp? = null,
 
+    val sightingDateTime: Timestamp? = null, // user-picked date/time
     // Don't store documentId in the object that goes to Firestore
     // Keep it only locally if you need it after reading
     @get:Exclude  // This prevents it from being written to Firestore

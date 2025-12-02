@@ -1,29 +1,35 @@
 package com.example.group21.database
 
+
+import android.net.Uri
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 class SightingRepository {
     private val db = FirebaseFirestore.getInstance()
     private val sightingsRef = db.collection("sightingData")
 
     //add a Sighting to the database
-    suspend fun addSighting(sighting: Sighting): Result<String> = try {
-        //val currentUser = auth.currentUser
-        //?: return Result.failure(Exception("User not logged in"))
-        /*
-        val storageRef = FirebaseStorage.getInstance().reference
-        val imageRef = storageRef.child("sightings/${UUID.randomUUID()}.jpg")
-        imageRef.putFile(localUri)
-            .addOnSuccessListener {
-                imageRef.downloadUrl.addOnSuccessListener { uri ->
-                    val downloadUrl = uri.toString()
-                    // Save a new Sighting with this download URL
-                }
-            }
-        */
-        val documentRef = sightingsRef.add(sighting).await()
+    suspend fun addSighting(localImageUri: Uri, sighting: Sighting): Result<String> = try {
+
+        //Upload image to Firebase Storage
+        val storageRef = FirebaseStorage.getInstance()
+            .reference
+            .child("sightings/${UUID.randomUUID()}.jpg")
+
+        // Upload  file
+        storageRef.putFile(localImageUri).await()
+
+        // Get download URL
+        val downloadUrl = storageRef.downloadUrl.await().toString()
+
+        // Store Sighting with the download URL
+        val sightingWithPhoto = sighting.copy(photoUrl = downloadUrl)
+
+        val documentRef = sightingsRef.add(sightingWithPhoto).await()
 
         Log.d("SightingRepository", "Sighting saved successfully! ID: ${documentRef.id}")
         Result.success(documentRef.id)

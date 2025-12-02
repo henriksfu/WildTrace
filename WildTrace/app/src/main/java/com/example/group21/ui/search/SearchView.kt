@@ -1,5 +1,6 @@
 package com.example.group21.ui.search.searchView
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +52,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
 import com.example.group21.R
 import com.example.group21.ui.sightingDetail.CardDetailsView
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun SearchView(
@@ -142,14 +145,47 @@ fun SearchView(
                 sightingViewModel.wipeAllSightings()
             })
             Row() {
-                SearchButton("Cat", 1f,  {
-                    sightingViewModel.saveSighting(cat)
+                SearchButton("Horse", 1f,  {
+                    // 1️⃣ Create a temporary dummy file
+                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
+
+                    // 2️⃣ Write a tiny 1-byte dummy image
+                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
+
+                    // 3️⃣ Convert to Android Uri
+                    val tempUri = Uri.fromFile(tempFile)
+
+                    // 4️⃣ Create a minimal Sighting and save
+                    val dummySighting = Sighting(animalName = "horse")
+                    sightingViewModel.saveSighting(tempUri, dummySighting)
                 })
-                SearchButton("Bat", 1f,  {
-                    sightingViewModel.saveSighting(bat)
+                SearchButton("Zebra", 1f,  {
+                    // 1️⃣ Create a temporary dummy file
+                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
+
+                    // 2️⃣ Write a tiny 1-byte dummy image
+                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
+
+                    // 3️⃣ Convert to Android Uri
+                    val tempUri = Uri.fromFile(tempFile)
+
+                    // 4️⃣ Create a minimal Sighting and save
+                    val dummySighting = Sighting(animalName = "zebra")
+                    sightingViewModel.saveSighting(tempUri, dummySighting)
                 })
-                SearchButton("Rat", 1f,  {
-                    sightingViewModel.saveSighting(rat)
+                SearchButton("Pikachu", 1f,  {
+                    // 1️⃣ Create a temporary dummy file
+                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
+
+                    // 2️⃣ Write a tiny 1-byte dummy image
+                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
+
+                    // 3️⃣ Convert to Android Uri
+                    val tempUri = Uri.fromFile(tempFile)
+
+                    // 4️⃣ Create a minimal Sighting and save
+                    val dummySighting = Sighting(animalName = "Pikachu")
+                    sightingViewModel.saveSighting(tempUri, dummySighting)
                 })
             }
             //

@@ -292,7 +292,18 @@ fun NewSightingEntry(
                     } else if (imageUri == null) {
                         errorMsg = "Please take an image or upload one."
                     } else {
-                        //
+
+                        // Combine selected date and time into one Calendar
+                        val combinedCalendar = Calendar.getInstance().apply {
+                            timeInMillis = selectedDateMillis
+                            val timeCalendar = Calendar.getInstance().apply { timeInMillis = selectedTimeMillis }
+                            set(Calendar.HOUR_OF_DAY, timeCalendar[Calendar.HOUR_OF_DAY])
+                            set(Calendar.MINUTE, timeCalendar[Calendar.MINUTE])
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val pickedTimestamp = Timestamp(combinedCalendar.time)
+
                         // insert into database
                         val sighting = Sighting(
                             animalName,
@@ -303,9 +314,10 @@ fun NewSightingEntry(
                             imageUri.toString(),
                             FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
                             FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                            Timestamp.now()
+                            Timestamp.now(),
+                            pickedTimestamp
                         )
-                        sightingViewModel.saveSighting(sighting)
+                        sightingViewModel.saveSighting(imageUri!! , sighting)
                         navController.popBackStack()
                     }
                 })

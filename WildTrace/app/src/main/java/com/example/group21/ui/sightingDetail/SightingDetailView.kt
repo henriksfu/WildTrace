@@ -77,20 +77,40 @@ fun SightingDetailView(
             )
         },
         bottomBar = {
-            Button(
-                onClick = {
-                    viewModel.onConfirmAndSearch(context, capturedImage)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 48.dp),
-                enabled = !viewModel.isLoading
+            Row(
+                modifier = Modifier.fillMaxWidth(0.8f).padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (viewModel.isLoading) {
-                    Text("Analyzing...", color = MaterialTheme.colorScheme.onBackground)
-                } else {
-                    Text("Save Sighting", color = MaterialTheme.colorScheme.onBackground)
+                Button(
+                    onClick = {
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .padding(bottom = 48.dp)
+                        .background(color = MaterialTheme.colorScheme.tertiary),
+                    enabled = !viewModel.isLoading
+                ) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
                 }
+                Button(
+                    onClick = {
+                        viewModel.onConfirmAndSearch(context, capturedImage)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .padding(bottom = 48.dp)
+                        .background(color = MaterialTheme.colorScheme.tertiary),
+                    enabled = !viewModel.isLoading
+                ) {
+                    if (viewModel.isLoading) {
+                        Text("Analyzing...", color = MaterialTheme.colorScheme.onBackground)
+                    } else {
+                        Text("Save Sighting", color = MaterialTheme.colorScheme.onBackground)
+                    }
+                }
+
             }
         }
     ) { paddingValues ->

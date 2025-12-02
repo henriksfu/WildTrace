@@ -2,6 +2,7 @@ package com.example.group21
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import androidx.compose.runtime.Composable
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,13 +41,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
+import com.example.group21.ui.search.sightingDetail.SightingDetailViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -149,35 +155,55 @@ fun NewSightingEntry(
     mapViewModel: MapViewModel,
     sightingViewModel: SightingViewModel,
 ) {
-    var animalName by rememberSaveable { mutableStateOf("") }
+    var animalName by rememberSaveable { mutableStateOf("") } // Kept remote naming
     var errorMsg by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
-    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var imageUri by rememberSaveable { mutableStateOf(mapViewModel.imageUri.value) } // Read initial URI from VM
     val context = LocalContext.current
     var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     var selectedTimeMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     var tempUri: Uri = Uri.EMPTY
-    //
-    // For saving the URI when the user takes a picture
+
+    // Get the SightingDetailViewModel instance (needed to read the identified name back)
+    val detailViewModel: SightingDetailViewModel = viewModel()
+
+    // --- EFFECT: READ RESULT FROM AI FLOW ---
+    LaunchedEffect(Unit) {
+        // When the screen comes back into focus, check the detail ViewModel
+        // If the name was identified and is NOT the default, update the input field.
+        if (detailViewModel.animalName != "Loading...") {
+            animalName = detailViewModel.animalName
+
+            // Clear the ViewModel state so the name doesn't pop up next time
+            detailViewModel.animalName = "Loading..."
+        }
+    }
+
+
+    // 1. Camera Launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
                 imageUri = tempUri
-                mapViewModel.setImageUri(imageUri!!, false)
+                mapViewModel.setImageUri(imageUri!!)
             }
         }
     )
     //
     // for saving the image when the  user select a file
+    // 2. Gallery Launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
-            imageUri = uri
+            if (uri != null) {
+                imageUri = uri
+                mapViewModel.setImageUri(uri)
+            }
         }
     )
 
-    if (mapViewModel.showPhotoDialog.value) {
+    if (mapViewModel.showPhotoDialog.value && mapViewModel.imageUri.value != null) {
         PhotoPreviewDialog(
             photoUri = mapViewModel.imageUri.value!!,
             onConfirm = {
@@ -219,39 +245,38 @@ fun NewSightingEntry(
             )
             //
             // If there is an image, display it, otherwise placeholder text
-            (
-                    if (imageUri != null) {
-                        AsyncImage(
-                            model = imageUri,
-                            contentDescription = "Selected Sighting Photo",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                                .heightIn(max = 250.dp)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No Photo Selected",
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 16.sp,
-                            )
-                        }
-                    }
+            if (imageUri != null) {
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = "Selected Sighting Photo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(align = Alignment.CenterVertically)
+                        .heightIn(max = 250.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No Photo Selected",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp,
                     )
+                }
+            }
+
             Spacer(modifier = Modifier.padding(4.dp))
             //
             Row(
                 modifier = Modifier.padding(horizontal = 5.dp)
             ) {
                 EntryButtonWithIcon("Camera", 1f, "Camera", {
-                    tempUri = createImageFile(context)
+                    tempUri = createSightingImage(context)
                     cameraLauncher.launch(tempUri)
                 })
                 EntryButtonWithIcon("Gallery", 1f, "Gallery", {
@@ -259,6 +284,9 @@ fun NewSightingEntry(
                 })
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // --- AI Button Handoff (Local logic restored) ---
             if (imageUri != null) {
                 Button(
                     onClick = {
@@ -285,9 +313,11 @@ fun NewSightingEntry(
                     Text("✨ Identify Animal with AI")
                 }
             }
+            // --- End AI Button ---
+
 
             //
-            // Show the date and time of this entry
+            // Show the date and time of this e
             dateAndTimeButtons(
                 selectedDateMillis = selectedDateMillis,
                 onDateSelected = { new -> selectedDateMillis = new },
@@ -320,7 +350,18 @@ fun NewSightingEntry(
                     } else if (imageUri == null) {
                         errorMsg = "Please take an image or upload one."
                     } else {
-                        //
+
+                        // Combine selected date and time into one Calendar
+                        val combinedCalendar = Calendar.getInstance().apply {
+                            timeInMillis = selectedDateMillis
+                            val timeCalendar = Calendar.getInstance().apply { timeInMillis = selectedTimeMillis }
+                            set(Calendar.HOUR_OF_DAY, timeCalendar[Calendar.HOUR_OF_DAY])
+                            set(Calendar.MINUTE, timeCalendar[Calendar.MINUTE])
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val pickedTimestamp = Timestamp(combinedCalendar.time)
+
                         // insert into database
                         val sighting = Sighting(
                             animalName,
@@ -331,9 +372,10 @@ fun NewSightingEntry(
                             imageUri.toString(),
                             FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
                             FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                            Timestamp.now()
+                            Timestamp.now(),
+                            pickedTimestamp
                         )
-                        sightingViewModel.saveSighting(imageUri!!, sighting)
+                        sightingViewModel.saveSighting(imageUri!! , sighting)
                         navController.popBackStack()
                     }
                 })
@@ -341,6 +383,7 @@ fun NewSightingEntry(
         }
     }
 }
+
 
 @Composable
 fun dateAndTimeButtons(
@@ -472,4 +515,19 @@ fun EntryButton(text: String, alpha: Float, onClick: () -> Unit) {
             style = MaterialTheme.typography.labelLarge
         )
     }
+}
+
+private fun createSightingImage(context: Context): Uri {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val storageDir = context.getExternalFilesDir(Environment.DIRECTORYPICTURES)
+    val image = File.createTempFile(
+        "JPEG${timeStamp}_",
+        ".jpg",
+        storageDir
+    )
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        image
+    )
 }

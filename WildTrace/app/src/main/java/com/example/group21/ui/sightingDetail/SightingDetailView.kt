@@ -7,7 +7,9 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -34,6 +36,10 @@ fun SightingDetailView(
     onBack: () -> Unit = {},
     viewModel: SightingDetailViewModel = viewModel()
 ) {
+    //
+    // to make scrollable
+    val scrollState = rememberScrollState()
+    //
     val context = LocalContext.current
     //
     // asynchronously build the image
@@ -73,18 +79,17 @@ fun SightingDetailView(
         bottomBar = {
             Button(
                 onClick = {
-                    // Retry or Confirm button
                     viewModel.onConfirmAndSearch(context, capturedImage)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(bottom = 48.dp),
                 enabled = !viewModel.isLoading
             ) {
                 if (viewModel.isLoading) {
-                    Text("Analyzing...")
+                    Text("Analyzing...", color = MaterialTheme.colorScheme.onBackground)
                 } else {
-                    Text("Save Sighting")
+                    Text("Save Sighting", color = MaterialTheme.colorScheme.onBackground)
                 }
             }
         }
@@ -94,7 +99,8 @@ fun SightingDetailView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 

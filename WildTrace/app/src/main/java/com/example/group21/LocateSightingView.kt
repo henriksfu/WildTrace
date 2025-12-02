@@ -1,45 +1,24 @@
 package com.example.group21
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.net.Uri
-import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.group21.database.Sighting
-import com.example.group21.database.SightingViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.firebase.firestore.GeoPoint
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
@@ -83,11 +62,12 @@ fun LocateSightingView(
             )
         }
     }
+    //
+    // State variable to check that the map is loaded. ths prevents map access before it is loaded
     var mapLoaded by remember { mutableStateOf(false) }
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
     )
-
     Box(
         modifier = Modifier.fillMaxSize().statusBarsPadding()
     ) {
@@ -97,7 +77,8 @@ fun LocateSightingView(
             properties = mapProperties,
             onMapLoaded = { mapLoaded = true }
         ) {
-
+            //
+            // Check that the marker was passed correctly
             if (marker != null) {
                 val rememberedMarkerState =
                     rememberUpdatedMarkerState(position = marker.state.position)
@@ -112,7 +93,8 @@ fun LocateSightingView(
                     visible = marker.isVisible.value,
                 )
             }
-
+            //
+            // when the map loads, zoom in on the sighting location
             LaunchedEffect(mapLoaded) {
                 if (mapLoaded) {
                     cameraPositionState.animate(

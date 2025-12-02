@@ -1,23 +1,33 @@
 package com.example.group21.ui.search.searchView
 
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,15 +55,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.group21.R
 import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.GeoPoint
-import com.example.group21.R
 import com.example.group21.ui.sightingDetail.CardDetailsView
-import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -62,7 +67,6 @@ import java.util.Locale
 fun SearchView(
     navController: NavController,
     sightingViewModel: SightingViewModel,
-    onResultClick: (String) -> Unit = {} // needed for navigation to detail later
 ) {
     //
     // all sightings state from viewModel
@@ -95,32 +99,31 @@ fun SearchView(
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Top),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
+            //
+            // Title
             Text(
                 text = "Search",
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 28.sp,
                 modifier = Modifier.padding(top = 8.dp),
             )
-
+            //
+            // Connected to query state. This is passed to the livedata filter
             SearchInput("Search For an Animal", query, { n -> query = n })
-
+            //
+            // Pressing this button activates the livedata filter.
             SearchButtonWithIcon("Search", 1f, "Search", {
                 sightingViewModel.loadFilteredSightings(query)
             })
-
-            SearchButton("Wipe Sightings", 1f, {
-                sightingViewModel.wipeAllSightings()
-            })
             //
-            // Set up the recycler view
+            // Set up the recycler view for all of the sightings
             SightingList(allSightings, 2, {
                 item -> selectedSighting = item
             })
         }
     }
     //
-    // Shows the popup when a sighting is clicked on
+    // Shows the CardDetailsView when a sighting is clicked on from the lazyVerticalGridView
     if (selectedSighting != null) {
         CardDetailsView(
             navController = navController,
@@ -130,6 +133,8 @@ fun SearchView(
     }
 }
 
+//
+// Sightings list. Rendered lazy so not all items are loaded at once
 @Composable
 fun SightingList(
     items: List<Sighting>,
@@ -219,31 +224,6 @@ fun SearchButtonWithIcon(text: String, alpha: Float, icon: String, onClick: () -
 }
 
 @Composable
-fun SearchButton(text: String, alpha: Float, onClick: () -> Unit) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .wrapContentWidth(Alignment.CenterHorizontally)
-            .wrapContentHeight()
-            .padding(4.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.tertiary.copy(alpha=alpha),
-            contentColor = colorScheme.onBackground,
-        ),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(4.dp),
-            fontSize = 16.sp,
-            style = MaterialTheme.typography.labelLarge
-        )
-    }
-}
-
-@Composable
 fun SightingCard(
     sighting: Sighting,
     modifier: Modifier = Modifier,
@@ -253,9 +233,7 @@ fun SightingCard(
     //  Make date string to display
     val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
     val timeStr = formatter.format(sighting.sightingDateTime?.toDate()?: Date())
-
-    val colorScheme = MaterialTheme.colorScheme
-
+    //
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -271,6 +249,9 @@ fun SightingCard(
                     shape = RoundedCornerShape(16.dp)
                 )
         ) {
+            //
+            // asynchronously create a painter that loads the image passed
+            // uses placeholder if the image fails
             val painter = rememberAsyncImagePainter(
                 model = sighting.photoUrl.ifBlank { R.drawable.image_not_found },
                 error = painterResource(R.drawable.image_not_found)

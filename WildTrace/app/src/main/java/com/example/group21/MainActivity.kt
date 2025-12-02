@@ -110,7 +110,7 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = "map",
+        startDestination = "login",
         route = "graph" // Standardized main navigation route name
     ) {
 
@@ -223,7 +223,7 @@ fun AppNavigation(navController: NavHostController) {
         composable("search") { backStackEntry ->
             val authEntry = navController.getBackStackEntry("graph")
             val sightingViewModel: SightingViewModel = viewModel(authEntry)
-            SearchView(navController, sightingViewModel, {})
+            SearchView(navController, sightingViewModel)
         }
 
         // --- Sighting Detail ---
@@ -335,6 +335,7 @@ fun LoginView(navController: NavController,
                 viewModel.login({navController.navigate("map")})
             })
             ProfileButton("Sign Up", 1f, {
+                viewModel.clearErrorMessage()
                 navController.navigate("signup")
             })
         }

@@ -250,7 +250,7 @@ fun MapViewScreen(
                 // For Searching entries
                 SearchButton(navController)
             }
-
+            //
             // Instruction text below the button
             Text(
                 text = "Click the plus or the map to add a sighting",
@@ -271,8 +271,6 @@ fun MapViewScreen(
             PhotoPreviewDialog(
                 photoUri = mapViewModel.imageUri.value!!,
                 onConfirm = {
-                    //
-                    // TODO API call to analyze image
                     mapViewModel.dismissPhotoDialog()
                 },
                 onDismiss = {

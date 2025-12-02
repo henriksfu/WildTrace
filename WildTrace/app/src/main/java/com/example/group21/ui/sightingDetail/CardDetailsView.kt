@@ -1,6 +1,5 @@
 package com.example.group21.ui.sightingDetail
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,12 +14,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,8 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.Coil.imageLoader
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.group21.PreviewButton
@@ -50,13 +44,14 @@ fun CardDetailsView(
     val scrollState = rememberScrollState()
     val colorScheme = MaterialTheme.colorScheme
     //
-    // Get the asynchronous image load
+    // Get the asynchronous image load from Coil
     val imageRequest = ImageRequest.Builder(LocalContext.current)
         .data(sighting.photoUrl.takeIf { it.isNotBlank() })
         .error(R.drawable.image_not_found)
         .fallback(R.drawable.image_not_found)
         .build()
-
+    //
+    // format the timestamp into a nice date format
     val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
     val timeStr = formatter.format(sighting.sightingDateTime?.toDate()?: Date())
 

@@ -31,29 +31,41 @@ class AuthViewModel : ViewModel() {
     fun onfNameChange(new: String) { fNameState.value = new }
     fun onlNameChange(new: String) { lNameState.value = new }
 
+    fun clearErrorMessage(){
+        errorMessageState.value = ""
+    }
+
     // -----------------------------
     // LOGIN
     // -----------------------------
     fun login(onSuccess: () -> Unit) {
+        //
+        // trim any leading and trailing whitespace
         val email = emailState.value.trim()
         val password = passwordState.value.trim()
-
+        //
+        // Check error states. Both a username and password should be entered.
         if (email.isEmpty() || password.isEmpty()) {
             errorMessageState.value = "Email and password required."
             Log.w("login","Email and password required")
             return
         }
-
+        //
+        // perform the firebase auth sign in
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    //
+                    // On success we reset all state (error messages, email, password)
+                    // and call the onsuccess to log in with the UI
                     Log.i("AuthViewModel", "Login successful")
                     resetStates()
                     onSuccess()
                 } else {
                     val exception = task.exception
                     if (exception is FirebaseAuthException) {
-
+                        //
+                        // Print the error message
                         when (exception.errorCode) {
                             "ERROR_USER_NOT_FOUND" -> { errorMessageState.value = "No account with that email exists." }
                             "ERROR_WRONG_PASSWORD" -> { errorMessageState.value = "Incorrect password." }
@@ -76,14 +88,18 @@ class AuthViewModel : ViewModel() {
     // SIGN UP
     // -----------------------------
     fun createProfile(onSuccess: () -> Unit) {
+        //
+        // remove leading and trailing whitespace
         val email = emailState.value.trim()
         val password = passwordState.value.trim()
-
+        //
+        // Make sure that all fields are filled in for the sign in view
         if (email.isEmpty() || password.isEmpty() || fNameState.value.isEmpty() || lNameState.value.isEmpty()) {
             errorMessageState.value = "All fields are required."
             return
         }
-
+        //
+        // perform the firebase auth profile creation
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -116,80 +132,4 @@ class AuthViewModel : ViewModel() {
         errorMessageState.value = ""
     }
 }
-
-
-//import com.google.firebase.auth.FirebaseAuth
-//
-//class AuthViewModel : ViewModel() {
-//
-//    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-//
-//    private val emailState = mutableStateOf("")
-//    val email: State<String> = emailState
-//
-//    private val passwordState = mutableStateOf("")
-//    val password: State<String> = passwordState
-//
-//    private val fNameState = mutableStateOf("")
-//    val fName: State<String> = fNameState
-//
-//    private val lNameState = mutableStateOf("")
-//    val lName: State<String> = lNameState
-//
-//    private val errorMessageState = mutableStateOf<String?>(null)
-//    val errorMessage: State<String?> = errorMessageState
-//
-//    fun onEmailChange(new: String) { emailState.value = new }
-//    fun onPasswordChange(new: String) { passwordState.value = new }
-//    fun onfNameChange(new: String) { fNameState.value = new }
-//    fun onlNameChange(new: String) { lNameState.value = new }
-//
-//    // -----------------------------
-//    // LOGIN
-//    // -----------------------------
-//    fun login(onSuccess: () -> Unit) {
-//        val email = emailState.value.trim()
-//        val password = passwordState.value.trim()
-//
-//        if (email.isEmpty() || password.isEmpty()) {
-//            errorMessageState.value = "Email and password required."
-//            return
-//        }
-//
-//        auth.signInWithEmailAndPassword(email, password)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    Log.i("AuthViewModel", "Login successful")
-//                    onSuccess()
-//                } else {
-//                    Log.e("AuthViewModel", "Login failed", task.exception)
-//                    errorMessageState.value = task.exception?.message
-//                }
-//            }
-//    }
-//
-//    // -----------------------------
-//    // SIGN UP
-//    // -----------------------------
-//    fun createProfile(onSuccess: () -> Unit) {
-//        val email = emailState.value.trim()
-//        val password = passwordState.value.trim()
-//
-//        if (email.isEmpty() || password.isEmpty() || fNameState.value.isEmpty() || lNameState.value.isEmpty()) {
-//            errorMessageState.value = "All fields are required."
-//            return
-//        }
-//
-//        auth.createUserWithEmailAndPassword(email, password)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    Log.i("AuthViewModel", "Account Created: ${auth.currentUser?.uid}")
-//                    onSuccess()
-//                } else {
-//                    Log.e("AuthViewModel", "Sign Up Failed", task.exception)
-//                    errorMessageState.value = task.exception?.message
-//                }
-//            }
-//    }
-//}
 

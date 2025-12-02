@@ -20,6 +20,8 @@ class SightingViewModel(
             repository.addSighting(localImageUri, sighting)
                 .onSuccess { docId ->
                     println("Sighting saved with ID: $docId")
+                    //
+                    // Update the livedata
                     _allSightings.value = _allSightings.value ?: (emptyList<Sighting>() + sighting)
                 }
                 .onFailure { e ->

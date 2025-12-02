@@ -64,6 +64,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
@@ -116,6 +117,23 @@ fun AppNavigation(navController: NavHostController) {
             val authEntry = navController.getBackStackEntry("graph")
             val authViewModel: AuthViewModel = viewModel(authEntry)
             LoginView(navController, authViewModel)
+        }
+
+        composable(
+            "locate_sighting/{sightingId}",
+            arguments = listOf(
+                navArgument("sightingId") { type = NavType.StringType },
+            )
+        ) { backStackEntry ->
+            val sightingId = backStackEntry.arguments?.getString("sightingId")
+
+            val graphEntry = navController.getBackStackEntry("graph")
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
+
+            val sighting: Sighting? = sightingViewModel.getSighting(sightingId?:"")
+            if(sighting != null){
+                LocateSightingView(sighting)
+            }
         }
 
         composable("signup") { backStackEntry ->

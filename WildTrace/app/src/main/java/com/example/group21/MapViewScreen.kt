@@ -70,6 +70,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.example.group21.database.SightingViewModel
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 val vancouver = LatLng(49.2827, -123.1207)
@@ -81,7 +82,6 @@ fun MapViewScreen(
     sightingViewModel: SightingViewModel
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val userLocation by mapViewModel.userLocation
     //
     // Get context for the bitmap conversion
@@ -123,8 +123,6 @@ fun MapViewScreen(
             val lat = sighting.location?.latitude ?: 0.0
             val lng = sighting.location?.longitude ?: 0.0
             val latLng = LatLng(lat, lng)
-            //val debugIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-            //mapViewModel.addMarker(latLng, sighting, debugIcon)
             mapViewModel.addMarker(latLng, sighting, descriptor)
         }
     }
@@ -145,6 +143,7 @@ fun MapViewScreen(
         isMyLocationEnabled = true
     )
     var clickedPoint by remember {mutableStateOf<LatLng?>(null)}
+    var newMarkerBitmap by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
@@ -164,21 +163,22 @@ fun MapViewScreen(
             mapViewModel.markers.forEach { sightingMarker ->
 
                 Log.e("MAP_MARKERS", "Rendering ${mapViewModel.markers.size} markers")
-
+                //
+                // remember the visibility state
                 val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
-
+                //
                 Marker(
                     tag = sightingMarker.sighting.documentId,
                     state = rememberedMarkerState,
-                    title = sightingMarker.sighting.animalName + " Sighting",
+                    title = sightingMarker.sighting.animalName,
                     icon = sightingMarker.thumbnail,
                     anchor = Offset(0.5f, 1f),
-                    snippet = "Click to see more detail",
+                    snippet = "Click to see more details",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
                         mapViewModel.showSightingDialog(it.tag as String)
                         true
-                    },
+                    }
                 )
             }
 
@@ -192,18 +192,37 @@ fun MapViewScreen(
             }
 
             if (clickedPoint != null) {
+                LaunchedEffect(clickedPoint) {
+                    val bitmap = createSightingMarkerBitmap(
+                        context = context,
+                        imageUrl = "addSighting",
+                        color = markerBorderColor
+                    )
+                    newMarkerBitmap = BitmapDescriptorFactory.fromBitmap(bitmap)
+                }
+            }
+
+            if (clickedPoint != null) {
                 val markerState = rememberUpdatedMarkerState(position = clickedPoint!!)
                 markerState.showInfoWindow()
+                //
+                // remember the visibility state
+                val rememberedMarkerState = rememberUpdatedMarkerState(
+                    position = LatLng(clickedPoint?.latitude?:0.0, clickedPoint?.longitude?:0.0)
+                )
+                //
+                // Create the plus marker
                 Marker(
-                    state = markerState,
+                    state = rememberedMarkerState,
                     title = "Click the marker to create a new sighting",
+                    icon = newMarkerBitmap,
+                    anchor = Offset(0.5f, 1f),
                     onClick = {
                         navController.
                         navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}")
                         true
                     }
                 )
-
             }
         }
         Column(
@@ -231,7 +250,7 @@ fun MapViewScreen(
 
             // Instruction text below the button
             Text(
-                text = "Take a picture or add a manual entry",
+                text = "Click the plus or the map to add a sighting",
                 style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
                 color = colorScheme.onBackground,
                 modifier = Modifier

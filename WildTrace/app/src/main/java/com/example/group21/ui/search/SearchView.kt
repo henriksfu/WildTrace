@@ -199,12 +199,9 @@ fun SearchView(
     // Shows the popup when a sighting is clicked on
     if (selectedSighting != null) {
         CardDetailsView(
-            sightingViewModel = sightingViewModel,
+            navController = navController,
             sighting = selectedSighting!!,
             onDismiss = { selectedSighting = null },
-            showInMap = {
-
-            }
         )
     }
 }
@@ -219,12 +216,11 @@ fun SightingList(
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier
-            .padding(top = 12.dp, bottom = 24.dp)
             .fillMaxSize()
             .heightIn(min = 200.dp, max = 500.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 24.dp)
     ) {
         items(
             items = items,

@@ -519,7 +519,7 @@ fun EntryButton(text: String, alpha: Float, onClick: () -> Unit) {
 
 private fun createSightingImage(context: Context): Uri {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-    val storageDir = context.getExternalFilesDir(Environment.DIRECTORYPICTURES)
+    val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
     val image = File.createTempFile(
         "JPEG${timeStamp}_",
         ".jpg",

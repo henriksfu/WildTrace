@@ -82,41 +82,6 @@ fun SearchView(
     // To make the view scrollable
     val scrollState = rememberScrollState()
     //
-    // Some test sightings
-    val cat = Sighting(
-        "cat",
-        "scientific cat",
-        1,
-        GeoPoint(0.0, 0.0),
-        "note",
-        "",
-        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
-        FirebaseAuth.getInstance().currentUser?.uid ?: "",
-        Timestamp.now()
-    )
-    val bat = Sighting(
-        "bat",
-        "scientific bat",
-        1,
-        GeoPoint(0.0, 0.0),
-        "note",
-        "",
-        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
-        FirebaseAuth.getInstance().currentUser?.uid ?: "",
-        Timestamp.now()
-    )
-    val rat = Sighting(
-        "rat",
-        "scientific rat",
-        1,
-        GeoPoint(0.0, 0.0),
-        "note",
-        "",
-        FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous",
-        FirebaseAuth.getInstance().currentUser?.uid ?: "",
-        Timestamp.now()
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -149,7 +114,7 @@ fun SearchView(
             })
             //
             // Set up the recycler view
-            SightingList(allSightings, 2, selectedSighting, {
+            SightingList(allSightings, 2, {
                 item -> selectedSighting = item
             })
         }
@@ -169,14 +134,14 @@ fun SearchView(
 fun SightingList(
     items: List<Sighting>,
     columns: Int = 2,
-    selectedSighting: Sighting?,
     onClick: (Sighting) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier
             .fillMaxSize()
-            .heightIn(min = 200.dp, max = 500.dp),
+            .heightIn(min = 200.dp, max = 500.dp)
+            .padding(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 32.dp)

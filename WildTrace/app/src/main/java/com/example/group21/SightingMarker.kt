@@ -25,20 +25,26 @@ suspend fun createSightingMarkerBitmap(
 ): Bitmap {
     //
     // Load the image, using placeholder on fail
-    val loader = ImageLoader(context)
-    val request = ImageRequest.Builder(context)
-        .data(imageUrl?.takeIf { it.isNotBlank() })
-        .allowHardware(false)
-        .build()
-    //
-    val drawable = runCatching {
-        val result = loader.execute(request)
-        (result.drawable ?: context.getDrawable(R.drawable.image_not_found)) as BitmapDrawable
-    }.getOrElse {
-        context.getDrawable(R.drawable.image_not_found) as BitmapDrawable
+    var drawable: BitmapDrawable? = null
+    if(imageUrl == "addSighting"){
+        drawable = context.getDrawable(R.drawable.plus_symbol) as BitmapDrawable
+    }
+    else {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(imageUrl?.takeIf { it.isNotBlank() })
+            .allowHardware(false)
+            .build()
+        //
+        drawable = runCatching {
+            val result = loader.execute(request)
+            (result.drawable ?: context.getDrawable(R.drawable.image_not_found)) as BitmapDrawable
+        }.getOrElse {
+            context.getDrawable(R.drawable.image_not_found) as BitmapDrawable
+        }
     }
     //
-    val bitmap = drawable.bitmap
+    val bitmap = drawable!!.bitmap
     //
     // Convert to px
     val size = sizeDp * context.resources.displayMetrics.density.roundToInt()

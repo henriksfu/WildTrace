@@ -32,6 +32,16 @@ class SightingViewModel(
     private val _allSightings = MutableLiveData<List<Sighting>>()
     val allSightings: LiveData<List<Sighting>> = _allSightings
 
+    fun getSighting(id: String): Sighting? {
+        if(_allSightings.value == null) return null
+        for( s in _allSightings.value!! ){
+            if( s.documentId == id ){
+                return s
+            }
+        }
+        return null
+    }
+
     fun loadAllSightings() {
         viewModelScope.launch {
             Log.i("sighting", "Calling repo.getAllSightings()")

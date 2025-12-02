@@ -12,7 +12,6 @@ class SightingRepository {
     private val db = FirebaseFirestore.getInstance()
     private val sightingsRef = db.collection("sightingData")
 
-    //add a Sighting to the database
     suspend fun addSighting(localImageUri: Uri, sighting: Sighting): Result<String> = try {
 
         //Upload image to Firebase Storage

@@ -12,8 +12,6 @@ class SightingViewModel(
 ) : ViewModel() {
 
     fun saveSighting(localImageUri: Uri, sighting: Sighting) {
-        //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //Authentication is instead done by caller
-        //
         // Save to the database
         viewModelScope.launch {
             Log.i("sighting","Calling repo.saveSighting")
@@ -56,10 +54,6 @@ class SightingViewModel(
         }
     }
 
-    //
-    // Takes a document ID
-    // removes the sighting from the database
-    // and from the livedata (to trigger observer changes)
     fun loadFilteredSightings(pattern: String) {
         viewModelScope.launch {
             Log.i("sighting", "Calling repo.getAllSightings()")
@@ -80,6 +74,7 @@ class SightingViewModel(
         }
     }
 
+    // Takes a document ID  removes the sighting from the database
     fun deleteSighting(documentId: String) {
         //
         // remove from livedata
@@ -98,11 +93,8 @@ class SightingViewModel(
                 }
         }
     }
-    //
-    // Called from the search view
-    // filters the livedata to only entries whose names or comments include this
-    // If there is no filter, get all of the entries
 
+    //delete all sightings for a user
     fun deleteAllSightings(userId: String) {
         viewModelScope.launch {
             repository.deleteAllSightings(userId)

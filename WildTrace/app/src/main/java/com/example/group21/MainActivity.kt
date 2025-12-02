@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Bitmap // ✅ ADDED
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -68,9 +69,9 @@ import com.google.firebase.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
 
-// ✅ NEW: A temporary holder for the image to pass it between screens
 object ImageHolder {
     var capturedImage: Bitmap? = null
+    var capturedUri: Uri? = null
 }
 
 class MainActivity : ComponentActivity() {
@@ -200,6 +201,7 @@ fun AppNavigation(navController: NavHostController) {
         composable("sightingDetail") {
             SightingDetailView(
                 capturedImage = ImageHolder.capturedImage, // Pass the singleton image
+                capturedUri = ImageHolder.capturedUri,
                 onBack = { navController.popBackStack() }
             )
         }

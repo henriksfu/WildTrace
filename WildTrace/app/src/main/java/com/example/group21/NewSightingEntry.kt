@@ -300,6 +300,7 @@ fun NewSightingEntry(
 
                             // 2. Save it to our singleton Holder
                             ImageHolder.capturedImage = bitmap
+                            ImageHolder.capturedUri = imageUri
 
                             // 3. Navigate to the Detail View for AI Analysis
                             navController.navigate("sightingDetail")

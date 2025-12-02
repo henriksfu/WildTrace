@@ -1,6 +1,7 @@
 package com.example.group21.ui.search.sightingDetail
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -22,18 +23,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.group21.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SightingDetailView(
-    sightingId: String = "10001",
-    capturedImage: Bitmap?, // <--- NEW: Accept the photo from the Camera Screen
+    capturedImage: Bitmap?,
+    capturedUri: Uri?,
     onBack: () -> Unit = {},
     viewModel: SightingDetailViewModel = viewModel()
 ) {
     val context = LocalContext.current
-
-    // ✅ TRIGGER: When screen opens, send the photo to the ViewModel for AI Analysis
+    //
+    // asynchronously build the image
+    val imageRequest = ImageRequest.Builder(LocalContext.current)
+        .data(capturedUri)
+        .error(com.example.group21.R.drawable.image_not_found)
+        .fallback(R.drawable.image_not_found)
+        .build()
+    //
+    // When screen opens, send the photo to the ViewModel for AI Analysis
     LaunchedEffect(Unit) {
         if (capturedImage != null) {
             viewModel.onConfirmAndSearch(context, capturedImage)
@@ -46,7 +56,10 @@ fun SightingDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sighting Details") },
+                title = { Text(
+                    text = "Sighting Details",
+                    color = MaterialTheme.colorScheme.onBackground
+                ) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -85,17 +98,15 @@ fun SightingDetailView(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ✅ UI CHANGE: Show the Captured Photo if available, otherwise Wiki Image
             if (capturedImage != null) {
-                Image(
-                    bitmap = capturedImage.asImageBitmap(),
-                    contentDescription = "Captured Photo",
+                AsyncImage(
+                    model = imageRequest,
+                    contentDescription = "Sighting Photo",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(250.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Gray),
-                    contentScale = ContentScale.Crop
+                        .heightIn(max = 500.dp)
+                        .padding(bottom = 16.dp),
+                    contentScale = ContentScale.Fit
                 )
             } else {
                 // Fallback to Wikipedia Image (e.g. if viewing history)

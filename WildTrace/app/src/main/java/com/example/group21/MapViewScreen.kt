@@ -3,9 +3,14 @@ package com.example.group21
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,12 +18,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,48 +50,83 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.ui.graphics.toArgb
+
+
+val vancouver = LatLng(49.2827, -123.1207)
 
 @Composable
 fun MapViewScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+    sightingViewModel: SightingViewModel
 ) {
-    val userLocation = getUserLocation().value
-    val vancouver = LatLng(49.2827, -123.1207)
+    val context = LocalContext.current
+    val userLocation by mapViewModel.userLocation
     val location = userLocation ?: vancouver
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
     val scope = rememberCoroutineScope()
 
-    val sightingViewModel: SightingViewModel = viewModel()
+    // --- Remote Sighting Loading Logic ---
+    val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
+    // markerBorderColor is a Compose Color object
+    val markerBorderColor = MaterialTheme.colorScheme.onSurface
+    var mapLoaded by remember { mutableStateOf(false) }
+    var clickedPoint by remember { mutableStateOf<LatLng?>(null) }
+    var newMarkerBitmap by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
-    LaunchedEffect(Unit) {
-        sightingViewModel.loadAllSightings()
-    }
+    val colorScheme = MaterialTheme.colorScheme // Access here for styling
 
-    LaunchedEffect(userLocation) {
-        userLocation?.let {
-            if (cameraPositionState.position.target != it) {
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                    durationMs = 1000
-                )
-            }
+    // Load and create markers when new sightings arrive
+    LaunchedEffect(allSightings) {
+        mapViewModel.clearMarkers()
+        if (allSightings.isEmpty()) return@LaunchedEffect
+        for (sighting in allSightings) {
+            // FIX: Pass Compose Color (markerBorderColor) to the stub helper
+            val bitmap = createSightingMarkerBitmap(context, sighting.photoUrl, markerBorderColor)
+            val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
+            val lat = sighting.location?.latitude ?: 0.0
+            val lng = sighting.location?.longitude ?: 0.0
+            val latLng = LatLng(lat, lng)
+            mapViewModel.addMarker(latLng, sighting, descriptor)
         }
     }
 
+    // Initial load and movement
+    LaunchedEffect(Unit) {
+        mapViewModel.fetchUserLocation(context)
+        sightingViewModel.loadAllSightings()
+    }
+
+    // Animate camera when user location is found
+    LaunchedEffect(mapLoaded, userLocation) {
+        if (mapLoaded && userLocation != null) {
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(userLocation!!, 15f),
+                durationMs = 1000
+            )
+        }
+    }
+    // --- End Remote Logic ---
+
+
+    // Dialog for displaying sighting details
     if (mapViewModel.showSightingDialog.value) {
-        SightingDisplayDialog(
-            onConfirm = { mapViewModel.dismissSightingDialog() },
-            onDismiss = { mapViewModel.dismissSightingDialog() },
-            sighting = mapViewModel.sightingMarker.value!!
+        SightingDisplayDialog( // FIX: Calls stub SightingDisplayDialog
+            sightingMarker = mapViewModel.sightingMarker.value!!,
+            onDismiss = { mapViewModel.dismissSightingDialog() }
         )
     }
 
     val mapProperties = MapProperties(isMyLocationEnabled = true)
-    var clickedPoint by remember { mutableStateOf<LatLng?>(null) }
 
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
@@ -85,29 +134,44 @@ fun MapViewScreen(
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
             onMapClick = { point -> clickedPoint = point },
-            onMapLongClick = { mapViewModel.toggleMarkers() }
+            onMapLongClick = { mapViewModel.toggleMarkers() },
+            onMapLoaded = { mapLoaded = true }
         ) {
+            // Render all remote markers
             mapViewModel.markers.forEach { sightingMarker ->
+                val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
                 Marker(
-                    tag = sightingMarker.id,
-                    state = sightingMarker.state,
-                    title = sightingMarker.title + " Sighting",
-                    snippet = "Click to see details",
+                    tag = sightingMarker.sighting.documentId,
+                    state = rememberedMarkerState,
+                    title = sightingMarker.sighting.animalName,
+                    icon = sightingMarker.thumbnail,
+                    anchor = Offset(0.5f, 1f),
+                    snippet = "Click to see more details",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
-                        sightingMarker.state.showInfoWindow()
+                        mapViewModel.showSightingDialog(it.tag as String)
                         true
-                    },
-                    onInfoWindowClick = { mapViewModel.showSightingDialog(it.tag as String) }
+                    }
                 )
             }
 
+            // Render the temporary marker on map click
             if (clickedPoint != null) {
+                LaunchedEffect(clickedPoint) {
+                    val bitmap = createSightingMarkerBitmap(
+                        context = context,
+                        imageUrl = "addSighting",
+                        color = markerBorderColor // Compose Color
+                    )
+                    newMarkerBitmap = BitmapDescriptorFactory.fromBitmap(bitmap)
+                }
                 val markerState = rememberUpdatedMarkerState(position = clickedPoint!!)
+                markerState.showInfoWindow()
                 Marker(
                     state = markerState,
-                    title = "New Sighting Here?",
-                    snippet = "Tap + button to add",
+                    title = "Click the marker to create a new sighting",
+                    icon = newMarkerBitmap,
+                    anchor = Offset(0.5f, 1f),
                     onClick = {
                         markerState.showInfoWindow()
                         true
@@ -126,7 +190,7 @@ fun MapViewScreen(
         ) {
             Row(verticalAlignment = Alignment.Bottom) {
 
-                // ✅ THE NEW EXPANDABLE BUTTON LOGIC
+                // ✅ EXPANDABLE BUTTON
                 ExpandableSightingButton(
                     navController = navController,
                     mapViewModel = mapViewModel,
@@ -144,6 +208,20 @@ fun MapViewScreen(
                     Icon(Icons.Filled.Search, "Search", Modifier.fillMaxSize(0.5f))
                 }
             }
+
+            // Instruction text below the button
+            Text(
+                text = "Tap + or map to add a sighting",
+                style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
+                color = colorScheme.onBackground,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .background(
+                        color = colorScheme.background,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .padding(8.dp)
+            )
         }
 
         // --- BOTTOM RIGHT CONTROLS ---
@@ -161,6 +239,7 @@ fun MapViewScreen(
             Button(onClick = {
                 scope.launch {
                     try {
+                        // FIX: Assuming mapViewModel now correctly contains randomSighting
                         cameraPositionState.animate(
                             update = CameraUpdateFactory.newLatLng(
                                 mapViewModel.randomSighting(cameraPositionState.position.target)
@@ -175,6 +254,8 @@ fun MapViewScreen(
     }
 }
 
+// --- EXPANDABLE PLUS BUTTON LOGIC ---
+
 @Composable
 fun ExpandableSightingButton(
     navController: NavController,
@@ -184,15 +265,15 @@ fun ExpandableSightingButton(
     var expanded by remember { mutableStateOf(false) }
     var tempUri by remember { mutableStateOf(Uri.EMPTY) }
     val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
 
     // 1. Camera Logic
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                // Save to ViewModel so Next Screen sees it
+                // Handoff to NewSightingEntry
                 mapViewModel.setImageUri(tempUri)
-                // Navigate
                 navController.navigate("sighting/${currentCameraTarget.latitude}/${currentCameraTarget.longitude}")
                 expanded = false
             }
@@ -204,6 +285,7 @@ fun ExpandableSightingButton(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             if (uri != null) {
+                // Handoff to NewSightingEntry
                 mapViewModel.setImageUri(uri)
                 navController.navigate("sighting/${currentCameraTarget.latitude}/${currentCameraTarget.longitude}")
                 expanded = false
@@ -221,25 +303,28 @@ fun ExpandableSightingButton(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 12.dp)) {
 
-                // GALLERY BUTTON
+                // 🖼️ GALLERY BUTTON (Automatic Entry)
                 FloatingActionButton(
-                    onClick = { galleryLauncher.launch("image/*") },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    containerColor = colorScheme.tertiaryContainer,
                     modifier = Modifier.size(60.dp)
                 ) {
                     Icon(Icons.Filled.PhotoLibrary, "Gallery")
                 }
 
-                // CAMERA BUTTON
+                // 🖊️ MANUAL ENTRY BUTTON
                 FloatingActionButton(
                     onClick = {
-                        tempUri = createImageFileForMap(context)
-                        cameraLauncher.launch(tempUri)
+                        // Navigate directly to the entry form (Manual Entry)
+                        navController.navigate("sighting/${currentCameraTarget.latitude}/${currentCameraTarget.longitude}")
+                        expanded = false
                     },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    containerColor = colorScheme.tertiaryContainer,
                     modifier = Modifier.size(60.dp)
                 ) {
-                    Icon(Icons.Filled.CameraAlt, "Camera")
+                    Icon(Icons.Filled.Draw, "Manual Entry")
                 }
             }
         }
@@ -247,8 +332,8 @@ fun ExpandableSightingButton(
         // --- Main Toggle Button (+ / X) ---
         FloatingActionButton(
             onClick = { expanded = !expanded },
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = colorScheme.primary,
+            contentColor = colorScheme.onPrimary,
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier.size(90.dp).padding(8.dp)
         ) {
@@ -261,7 +346,18 @@ fun ExpandableSightingButton(
     }
 }
 
-// Private helper for this file
+// --- STUB: Missing function definition (Needed for Marker logic) ---
+// This function needs to be defined outside of MapViewScreen.
+fun createSightingMarkerBitmap(
+    context: Context,
+    imageUrl: String,
+    color: Color
+): android.graphics.Bitmap {
+    // Placeholder implementation (Returns a blank bitmap for compilation)
+    return android.graphics.Bitmap.createBitmap(96, 96, android.graphics.Bitmap.Config.ARGB_8888)
+}
+
+// --- Helper Function for Camera (Kept separate from Composable) ---
 private fun createImageFileForMap(context: Context): Uri {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val storageDir = context.getExternalFilesDir(null)

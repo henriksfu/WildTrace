@@ -23,7 +23,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // --- Load API Keys from local.properties ---
-        val properties = Properties()   // ✔️ FIXED — use imported class
+        val properties = Properties()
         val localProps = project.rootProject.file("local.properties")
         if (localProps.exists()) {
             properties.load(localProps.inputStream())
@@ -33,7 +33,7 @@ android {
         buildConfigField(
             "String",
             "GC_VISION_KEY",
-            "\"${properties.getProperty("GC_VISION_API_KEY") ?: ""}\""
+            properties.getProperty("GC_VISION_API_KEY") // <--- REMOVED EXTRA QUOTES
         )
 
         // --- Wikipedia API Key ---
@@ -83,7 +83,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation) // Kept from remote
 
     // Core Libraries & Architecture
     implementation(libs.androidx.core.ktx)
@@ -96,20 +96,25 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
+    implementation(libs.androidx.compose.runtime.livedata) // Kept from remote
+    implementation(libs.androidx.ui) // Kept from remote
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
-    // Firebase
+    // Firebase (Combined Block)
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-storage") // Remote addition (Crucial for images)
+
 
     // Compatibility/Utility
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.12.0")
+
 
     // Testing tools
     testImplementation(libs.junit)

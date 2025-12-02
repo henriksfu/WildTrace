@@ -190,7 +190,7 @@ fun NewSightingEntry(
         // Is there a saved Uri from the AI screen?
         if(ImageHolder.capturedUri != null) imageUri = ImageHolder.capturedUri
     }
-    
+
     // 1. Camera Launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
@@ -343,6 +343,7 @@ fun NewSightingEntry(
             ) {
                 EntryButton("Cancel", 0.7f, {
                     sightingViewModel.loadAllSightings()
+                    ImageHolder.capturedUri = null
                     navController.navigate("map")
                 })
                 EntryButton("Save Entry", 1f, {
@@ -379,7 +380,9 @@ fun NewSightingEntry(
                             pickedTimestamp
                         )
                         sightingViewModel.saveSighting(imageUri!! , sighting)
-                        navController.popBackStack()
+                        sightingViewModel.loadAllSightings()
+                        ImageHolder.capturedUri = null
+                        navController.navigate("map")
                     }
                 })
             }

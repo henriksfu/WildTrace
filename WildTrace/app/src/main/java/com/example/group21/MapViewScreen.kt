@@ -85,9 +85,6 @@ fun MapViewScreen(
     val context = LocalContext.current
     val userLocation by mapViewModel.userLocation
     //
-    // Get context for the bitmap conversion
-    val compositionContext = rememberCompositionContext()
-    //
     // Default location in case can't find the user's
     val location = userLocation ?: vancouver
     val cameraPositionState = rememberCameraPositionState {
@@ -169,13 +166,13 @@ fun MapViewScreen(
                 val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
                 //
                 Marker(
-                    tag = marker.sighting.documentId,
-                    state = markerState,
-                    title = marker.sighting.animalName,
-                    icon = icon,
+                    tag = sightingMarker.sighting.documentId,
+                    state = rememberedMarkerState,
+                    title = sightingMarker.sighting.animalName,
+                    icon = sightingMarker.thumbnail,
                     anchor = Offset(0.5f, 1f),
                     snippet = "Click to see more details",
-                    visible = marker.isVisible.value,
+                    visible = sightingMarker.isVisible.value,
                     onClick = {
                         mapViewModel.showSightingDialog(it.tag as String)
                         true

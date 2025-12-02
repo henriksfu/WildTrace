@@ -179,7 +179,7 @@ fun SightingList(
             .heightIn(min = 200.dp, max = 500.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 24.dp)
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 32.dp)
     ) {
         items(
             items = items,

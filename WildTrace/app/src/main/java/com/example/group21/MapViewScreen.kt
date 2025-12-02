@@ -222,8 +222,7 @@ fun MapViewScreen(
                     icon = newMarkerBitmap,
                     anchor = Offset(0.5f, 1f),
                     onClick = {
-                        navController.
-                        navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}")
+                        navController.navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}/${""}/${""}/${-1L}/${-1L}")
                         true
                     }
                 )

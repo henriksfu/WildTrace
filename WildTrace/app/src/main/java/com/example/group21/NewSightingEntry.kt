@@ -2,6 +2,7 @@ package com.example.group21
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -256,6 +257,33 @@ fun NewSightingEntry(
                 EntryButtonWithIcon("Gallery", 1f, "Gallery", {
                     galleryLauncher.launch("image/*")
                 })
+            }
+
+            if (imageUri != null) {
+                Button(
+                    onClick = {
+                        try {
+                            // 1. Convert the URI to a Bitmap
+                            val inputStream = context.contentResolver.openInputStream(imageUri!!)
+                            val bitmap = BitmapFactory.decodeStream(inputStream)
+
+                            // 2. Save it to our singleton Holder
+                            ImageHolder.capturedImage = bitmap
+
+                            // 3. Navigate to the Detail View for AI Analysis
+                            navController.navigate("sightingDetail")
+                        } catch (e: Exception) {
+                            Log.e("NewSightingEntry", "Error converting image", e)
+                            errorMsg = "Error processing image for AI."
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("✨ Identify Animal with AI")
+                }
             }
 
             //

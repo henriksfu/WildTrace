@@ -68,6 +68,8 @@ import com.example.group21.ui.theme.WildTraceTheme
 import com.google.firebase.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.analytics
+import androidx.core.net.toUri
+import kotlin.Float
 
 object ImageHolder {
     var capturedImage: Bitmap? = null
@@ -168,10 +170,28 @@ fun AppNavigation(navController: NavHostController) {
 
         // --- New Sighting Screen (Conflict Resolved) ---
         composable(
-            route = "sighting/{latitude}/{longitude}",
+            route = "sighting/{latitude}/{longitude}/{animalName}/{comment}/{date}/{time}/{imageUri}",
             arguments = listOf(
                 navArgument("latitude") { type = NavType.FloatType },
-                navArgument("longitude") { type = NavType.FloatType }
+                navArgument("longitude") { type = NavType.FloatType },
+                navArgument("animalName") {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument("comment") {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument("date") {
+                    type = NavType.LongType
+                },
+                navArgument("time") {
+                    type = NavType.LongType
+                },
+                navArgument("imageUri") {
+                    type = NavType.StringType
+                    nullable = true
+                }
             )
         ) { backStackEntry ->
             // make sure its same viewmodel instances
@@ -181,13 +201,24 @@ fun AppNavigation(navController: NavHostController) {
 
             val latitude = backStackEntry.arguments?.getFloat("latitude")
             val longitude = backStackEntry.arguments?.getFloat("longitude")
+            val animalName = backStackEntry.arguments?.getString("animalName")
+            val comment = backStackEntry.arguments?.getString("comment")
+            val date = backStackEntry.arguments?.getLong("date")
+            val time = backStackEntry.arguments?.getLong("time")
+            val uriString = backStackEntry.arguments?.getString("imageUri")
+
+            val imageUri: Uri? = runCatching { uriString?.toUri() }.getOrNull()
 
             NewSightingEntry(
                 navController = navController,
                 lat = latitude,
                 lng = longitude,
-                mapViewModel = mapViewModel,
-                sightingViewModel = sightingViewModel
+                inAnimalName = animalName?:"",
+                inComment = comment?:"",
+                inDate = date?:-1L,
+                inTime = time?:-1L,
+                savedUri = imageUri,
+                sightingViewModel = sightingViewModel,
             )
         }
 
@@ -198,11 +229,50 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         // --- Sighting Detail ---
-        composable("sightingDetail") {
+        composable(
+            "sightingDetail/{latitude}/{longitude}/{animalName}/{comment}/{date}/{time}",
+            arguments = listOf(
+                navArgument("latitude") {
+                    type = NavType.FloatType
+                                        },
+                navArgument("longitude") {
+                    type = NavType.FloatType
+                                         },
+                navArgument("animalName") {
+                type = NavType.StringType
+                nullable = true
+                },
+                navArgument("comment") {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument("date") {
+                    type = NavType.LongType
+                },
+                navArgument("time") {
+                    type = NavType.LongType
+                }
+        )
+        ) { backStackEntry ->
+
+            val latitude = backStackEntry.arguments?.getFloat("latitude")
+            val longitude = backStackEntry.arguments?.getFloat("longitude")
+            val animalName = backStackEntry.arguments?.getString("animalName")
+            val comment = backStackEntry.arguments?.getString("comment")
+            val date = backStackEntry.arguments?.getLong("date")
+            val time = backStackEntry.arguments?.getLong("time")
+
             SightingDetailView(
-                capturedImage = ImageHolder.capturedImage, // Pass the singleton image
+                navController = navController,
+                capturedImage = ImageHolder.capturedImage,
                 capturedUri = ImageHolder.capturedUri,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                latitude = latitude,
+                longitude = longitude,
+                animalName = animalName?:"",
+                comment = comment?:"",
+                date =  date?:-1L,
+                time =  time?:-1L
             )
         }
     }

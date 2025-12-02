@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.group21.R
@@ -31,10 +32,18 @@ import com.example.group21.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SightingDetailView(
+    navController: NavController,
     capturedImage: Bitmap?,
     capturedUri: Uri?,
     onBack: () -> Unit = {},
-    viewModel: SightingDetailViewModel = viewModel()
+    viewModel: SightingDetailViewModel = viewModel(),
+    latitude: Float?,
+    longitude: Float?,
+    animalName: String,
+    comment: String,
+    date: Long,
+    time: Long
+
 ) {
     //
     // to make scrollable
@@ -86,7 +95,7 @@ fun SightingDetailView(
             ) {
                 Button(
                     onClick = {
-                        //navController.popBackStack()
+                        navController.navigate("sighting/${latitude}/${longitude}/${""}/${""}/${-1L}/${-1L}/${""}")
                     },
                     modifier = Modifier
                         .padding(8.dp),
@@ -96,7 +105,9 @@ fun SightingDetailView(
                 }
                 Button(
                     onClick = {
-                        viewModel.onConfirmAndSearch(context, capturedImage)
+                        navController.navigate(
+                            "sighting/{$latitude}/{$longitude}/{$animalName}/{$comment}/{$date}/{$time}/{$capturedUri.toString()}"
+                        )
                     },
                     modifier = Modifier
                         .padding(8.dp),

@@ -166,16 +166,23 @@ fun NewSightingEntry(
     navController: NavController,
     lat: Float?,
     lng: Float?,
-    mapViewModel: MapViewModel,
+    inAnimalName: String,
+    inComment: String,
+    inDate: Long,
+    inTime: Long,
+    savedUri: Uri?,
     sightingViewModel: SightingViewModel,
 ) {
-    var animalName by rememberSaveable { mutableStateOf("") } // Kept remote naming
+    var animalName by rememberSaveable { mutableStateOf(inAnimalName) } // Kept remote naming
     var errorMsg by rememberSaveable { mutableStateOf("") }
-    var comment by rememberSaveable { mutableStateOf("") }
-    var imageUri by rememberSaveable { mutableStateOf(mapViewModel.imageUri.value) } // Read initial URI from VM
+    var comment by rememberSaveable { mutableStateOf(inComment) }
+    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    //if(savedUri != null) imageUri = savedUri
     val context = LocalContext.current
     var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
+    if(inDate != -1L) selectedDateMillis = inDate
     var selectedTimeMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
+    if(inTime != -1L) selectedTimeMillis = inTime
     var tempUri: Uri = Uri.EMPTY
 
     // Get the SightingDetailViewModel instance (needed to read the identified name back)
@@ -301,7 +308,7 @@ fun NewSightingEntry(
                             ImageHolder.capturedUri = imageUri
 
                             // 3. Navigate to the Detail View for AI Analysis
-                            navController.navigate("sightingDetail")
+                            navController.navigate("sightingDetail/${lat?:0.0}/${lng?:0.0}/${animalName}/${comment}/${selectedDateMillis}/${selectedTimeMillis}")
                         } catch (e: Exception) {
                             Log.e("NewSightingEntry", "Error converting image", e)
                             errorMsg = "Error processing image for AI."

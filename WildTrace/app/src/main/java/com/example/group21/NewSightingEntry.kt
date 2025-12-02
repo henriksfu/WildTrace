@@ -178,10 +178,6 @@ fun NewSightingEntry(
     var comment by rememberSaveable { mutableStateOf(inComment) }
     var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     //
-    // Is there a saved Uri from the AI screen?
-    if(ImageHolder.capturedUri != null){
-        imageUri = ImageHolder.capturedUri
-    }
     val context = LocalContext.current
     var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     if(inDate != -1L) selectedDateMillis = inDate
@@ -189,22 +185,12 @@ fun NewSightingEntry(
     if(inTime != -1L) selectedTimeMillis = inTime
     var tempUri: Uri = Uri.EMPTY
 
-    // Get the SightingDetailViewModel instance (needed to read the identified name back)
-    val detailViewModel: SightingDetailViewModel = viewModel()
-
-    // --- EFFECT: READ RESULT FROM AI FLOW ---
     LaunchedEffect(Unit) {
-        // When the screen comes back into focus, check the detail ViewModel
-        // If the name was identified and is NOT the default, update the input field.
-        if (detailViewModel.animalName != "Loading...") {
-            animalName = detailViewModel.animalName
-
-            // Clear the ViewModel state so the name doesn't pop up next time
-            detailViewModel.animalName = "Loading..."
-        }
+        //
+        // Is there a saved Uri from the AI screen?
+        if(ImageHolder.capturedUri != null) imageUri = ImageHolder.capturedUri
     }
-
-
+    
     // 1. Camera Launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
@@ -324,7 +310,7 @@ fun NewSightingEntry(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        "✨ Identify Animal with AI",
+                        "✨ Identify Animal",
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                 }
@@ -356,7 +342,8 @@ fun NewSightingEntry(
                 modifier = Modifier.padding(horizontal = 5.dp)
             ) {
                 EntryButton("Cancel", 0.7f, {
-                    navController.popBackStack()
+                    sightingViewModel.loadAllSightings()
+                    navController.navigate("map")
                 })
                 EntryButton("Save Entry", 1f, {
                     //

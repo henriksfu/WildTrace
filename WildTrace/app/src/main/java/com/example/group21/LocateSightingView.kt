@@ -109,8 +109,7 @@ fun LocateSightingView(
                     title = marker.sighting.animalName,
                     icon = marker.thumbnail,
                     anchor = Offset(0.5f, 1f),
-                    snippet = "Click to see more details",
-                    visible = marker.isVisible.value
+                    visible = marker.isVisible.value,
                 )
             }
 

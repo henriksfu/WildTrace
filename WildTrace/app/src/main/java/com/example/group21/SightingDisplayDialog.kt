@@ -82,7 +82,7 @@ fun SightingDisplayDialog(
                 text = timeStr,
                 color = colorScheme.onBackground,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(bottom = 16.dp),
             )
 
             AsyncImage(

@@ -64,6 +64,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
@@ -107,33 +108,47 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = "login",
-        route = "authentication_graph"
+        startDestination = "map",
+        route = "graph"
     ) {
 
         // --- Reid's Screens ---
         composable("login") { backStackEntry ->
-            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authEntry = navController.getBackStackEntry("graph")
             val authViewModel: AuthViewModel = viewModel(authEntry)
             LoginView(navController, authViewModel)
         }
 
+        composable(
+            "locate_sighting/{sightingId}",
+            arguments = listOf(
+                navArgument("sightingId") { type = NavType.StringType },
+            )
+        ) { backStackEntry ->
+            val sightingId = backStackEntry.arguments?.getString("sightingId")
+
+            val graphEntry = navController.getBackStackEntry("graph")
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
+
+            val sighting: Sighting? = sightingViewModel.getSighting(sightingId?:"")
+            if(sighting != null){
+                LocateSightingView(sighting)
+            }
+        }
+
         composable("signup") { backStackEntry ->
-            val authEntry = navController.getBackStackEntry("authentication_graph")
+            val authEntry = navController.getBackStackEntry("graph")
             val authViewModel: AuthViewModel = viewModel(authEntry)
             SignupView(navController, authViewModel)
         }
-        composable("profile") {
-            ProfileView(navController)
-        }
-
-        // --- Map Screen ---
+        
         composable("map") { backStackEntry ->
 
             // ViewModels scoped to this NavGraph level
 
-            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val graphEntry = navController.getBackStackEntry("graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
+            val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
             val context = LocalContext.current
             val notFineLocation =
@@ -146,7 +161,8 @@ fun AppNavigation(navController: NavHostController) {
             } else {
                 MapViewScreen(
                     navController = navController,
-                    mapViewModel = mapViewModel
+                    mapViewModel = mapViewModel,
+                    sightingViewModel = sightingViewModel
                 )
             }
         }
@@ -159,10 +175,9 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("longitude") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
-
+            //
             // make sure its same viewmodel instances
-
-            val graphEntry = navController.getBackStackEntry("authentication_graph")
+            val graphEntry = navController.getBackStackEntry("graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)
 
@@ -178,8 +193,10 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        composable("search") {
-            SearchView()
+        composable("search") { backStackEntry ->
+            val authEntry = navController.getBackStackEntry("graph")
+            val sightingViewModel: SightingViewModel = viewModel(authEntry)
+            SearchView(navController, sightingViewModel, {})
         }
 
         composable("sightingDetail") {
@@ -429,7 +446,7 @@ fun SignupView(navController: NavController,
         Row(
             modifier = Modifier.padding(horizontal = 25.dp)
         ) {
-            ProfileButton("Back", 0.65f, {
+            ProfileButton("Back", 0.7f, {
                 viewModel.resetStates()
                 navController.navigate("login")
             })

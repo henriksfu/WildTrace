@@ -96,7 +96,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation(libs.androidx.compose.animation)
-
+    implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.androidx.ui)
 
 
     // --- Debug/Testing tools ---
@@ -113,5 +114,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-storage")
 
 }

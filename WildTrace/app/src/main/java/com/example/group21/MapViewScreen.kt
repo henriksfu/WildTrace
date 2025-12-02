@@ -9,11 +9,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -60,74 +57,94 @@ import java.util.Locale
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Handyman
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.runtime.CompositionContext
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCompositionContext
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import com.example.group21.database.SightingViewModel
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
+val vancouver = LatLng(49.2827, -123.1207)
 @Composable
 fun MapViewScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+    sightingViewModel: SightingViewModel
 ) {
-    val userLocation = getUserLocation().value
-    val vancouver = LatLng(49.2827, -123.1207)
+    val context = LocalContext.current
+    val userLocation by mapViewModel.userLocation
+    //
+    // Get context for the bitmap conversion
+    val compositionContext = rememberCompositionContext()
+    //
+    // Default location in case can't find the user's
     val location = userLocation ?: vancouver
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
-    val scope = rememberCoroutineScope()
-    
-    val sightingViewModel: SightingViewModel = viewModel()
-    LaunchedEffect(Unit) {
+    //
+    // Observe all sightings
+    val allSightings by sightingViewModel.allSightings.observeAsState(emptyList())
+    val markerBorderColor = MaterialTheme.colorScheme.onSurface
+    //
+    // On launch
+    LaunchedEffect(allSightings) {
+        //
+        // First, clear the markers
+        mapViewModel.clearMarkers()
+        //
+        // Is there anything to do?
+        if( allSightings.isEmpty() ) return@LaunchedEffect
+        //
+        // Create a marker for each sighting
+        for ( sighting in allSightings ){
+            //
+            // Get the bitmap for the custom marker
+            val bitmap = createSightingMarkerBitmap(
+                context = context,
+                imageUrl = sighting.photoUrl,
+                color = markerBorderColor
+            )
+            //
+            // Convert it into a bitmap descriptor
+            val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
+            //
+            // Add the marker
+            val lat = sighting.location?.latitude ?: 0.0
+            val lng = sighting.location?.longitude ?: 0.0
+            val latLng = LatLng(lat, lng)
+            mapViewModel.addMarker(latLng, sighting, descriptor)
+        }
+    }
+    //
+    // get the user's' location and fetch sightings
+    LaunchedEffect(Unit){
+        mapViewModel.fetchUserLocation(context)
         Log.d("MAP_SCREEN", "Fetching all sightings...")
         sightingViewModel.loadAllSightings()
-
-        sightingViewModel.allSightings.observeForever { list ->
-            Log.d("MAP_SCREEN", "Got ${list.size} sightings:")
-            list.forEach {
-                Log.d("MAP_SCREEN", "→ ${it.animalName} (${it.count}x) at ${it.location}")
-            }
-        }
     }
 
     var expanded by remember { mutableStateOf(false) }
+    var mapLoaded by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
-    LaunchedEffect(userLocation) {
-        userLocation?.let {
-            if (cameraPositionState.position.target != it) {
-                cameraPositionState.animate(
-                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                    durationMs = 1000
-                )
-            }
-        }
-    }
-
-
-    if (mapViewModel.showSightingDialog.value) {
-        SightingDisplayDialog(
-            onConfirm = {
-                mapViewModel.dismissSightingDialog()
-            },
-            onDismiss = {
-                mapViewModel.dismissSightingDialog()
-            },
-            sighting = mapViewModel.sightingMarker.value!!
-        )
-    }
-
-
 
     val mapProperties = MapProperties(
         isMyLocationEnabled = true
     )
     var clickedPoint by remember {mutableStateOf<LatLng?>(null)}
+    var newMarkerBitmap by remember { mutableStateOf<BitmapDescriptor?>(null) }
+
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -138,40 +155,74 @@ fun MapViewScreen(
             } ,
             onMapLongClick =  {
                 mapViewModel.toggleMarkers()
+            },
+            onMapLoaded = {
+                mapLoaded = true
             }
-
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
+
+                Log.e("MAP_MARKERS", "Rendering ${mapViewModel.markers.size} markers")
+                //
+                // remember the visibility state
+                val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
+                //
                 Marker(
-                    tag = sightingMarker.id,
-                    state = sightingMarker.state,
-                    title = sightingMarker.title + " Sighting",
-                    snippet = "Click this to see full details",
+                    tag = sightingMarker.sighting.documentId,
+                    state = rememberedMarkerState,
+                    title = sightingMarker.sighting.animalName,
+                    icon = sightingMarker.thumbnail,
+                    anchor = Offset(0.5f, 1f),
+                    snippet = "Click to see more details",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
-                        sightingMarker.state.showInfoWindow()
-                        true
-                    },
-                    onInfoWindowClick = {
                         mapViewModel.showSightingDialog(it.tag as String)
+                        true
                     }
-
                 )
+            }
+
+            LaunchedEffect(mapLoaded, userLocation) {
+                if (mapLoaded && userLocation != null) {
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngZoom(userLocation!!, 15f),
+                        durationMs = 1000
+                    )
+                }
+            }
+
+            if (clickedPoint != null) {
+                LaunchedEffect(clickedPoint) {
+                    val bitmap = createSightingMarkerBitmap(
+                        context = context,
+                        imageUrl = "addSighting",
+                        color = markerBorderColor
+                    )
+                    newMarkerBitmap = BitmapDescriptorFactory.fromBitmap(bitmap)
+                }
             }
 
             if (clickedPoint != null) {
                 val markerState = rememberUpdatedMarkerState(position = clickedPoint!!)
                 markerState.showInfoWindow()
+                //
+                // remember the visibility state
+                val rememberedMarkerState = rememberUpdatedMarkerState(
+                    position = LatLng(clickedPoint?.latitude?:0.0, clickedPoint?.longitude?:0.0)
+                )
+                //
+                // Create the plus marker
                 Marker(
-                    state = markerState,
+                    state = rememberedMarkerState,
                     title = "Click the marker to create a new sighting",
+                    icon = newMarkerBitmap,
+                    anchor = Offset(0.5f, 1f),
                     onClick = {
                         navController.
                         navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}")
                         true
                     }
                 )
-
             }
         }
         Column(
@@ -185,35 +236,21 @@ fun MapViewScreen(
             Row(
                 verticalAlignment = Alignment.Bottom
             ) {
-
                 AddSightingButton(
                     navController,
                     mapViewModel,
                     expanded = expanded,
-                    onExpandedChange = { expanded = it }
+                    onExpandedChange = { expanded = it },
+                    userLocation
                 )
-
+                //
                 // For Searching entries
-                FloatingActionButton(
-                    onClick = { /* TODO */ },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search for Sightings",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
-                }
+                SearchButton(navController)
             }
 
             // Instruction text below the button
             Text(
-                text = "Take a picture or add a manual entry",
+                text = "Click the plus or the map to add a sighting",
                 style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
                 color = colorScheme.onBackground,
                 modifier = Modifier
@@ -225,100 +262,81 @@ fun MapViewScreen(
                     .padding(8.dp)
             )
         }
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(
-                    start = 16.dp,
-                    top = 16.dp,
-                    end = 16.dp,
-                    bottom = 100.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            val maxWidth = 180.dp
-            Button(onClick = {
-                navController.
-                navigate("sighting/${cameraPositionState.position.target.latitude}/${cameraPositionState.position.target.longitude}")
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Create New Sighting at Current Location",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Button(onClick = {
-
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Load All Sightings",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Button(onClick = {
-                scope.launch {
-                    val currentPosition = cameraPositionState.position.target
-                    cameraPositionState.animate(
-                        update = CameraUpdateFactory.newLatLng(
-                            mapViewModel.randomSighting(
-                                currentPosition
-                            )
-                        )
-                    )
+        //
+        // When triggered, show the photo preview dialog
+        if (mapViewModel.showPhotoDialog.value) {
+            PhotoPreviewDialog(
+                photoUri = mapViewModel.imageUri.value!!,
+                onConfirm = {
+                    //
+                    // TODO API call to analyze image
+                    mapViewModel.dismissPhotoDialog()
+                },
+                onDismiss = {
+                    mapViewModel.dismissPhotoDialog()
                 }
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Go to Random Sighting",
-                    maxLines = Int.MAX_VALUE,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            )
         }
+    }
+
+    if (mapViewModel.showSightingDialog.value) {
+        SightingDisplayDialog(
+            sightingMarker = mapViewModel.sightingMarker.value!!,
+            onDismiss = {
+                mapViewModel.dismissSightingDialog()
+            }
+        )
     }
 }
 
 @Composable
-fun AddSightingButton(
-    navController: NavController,
-    mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit
-){
-    //
-    // Is it expanded
+fun SearchButton(navController: NavController){
+
     val colorScheme = MaterialTheme.colorScheme
 
+    FloatingActionButton(
+        onClick = {
+            navController.navigate("search")
+        },
+        containerColor = colorScheme.background,
+        contentColor = colorScheme.onBackground,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .size(width = 90.dp, height = 90.dp)
+            .padding(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Search,
+            contentDescription = "Search for Sightings",
+            modifier = Modifier.fillMaxSize(0.5f)
+        )
+    }
+}
+@Composable
+//
+// This button hides two smaller popouts that let the user select "manual" entry or "automatic" entry
+fun AddSightingButton(
+    navController: NavController,
+    mapViewModel: MapViewModel,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    userLocation: LatLng?,
+){
+    val colorScheme = MaterialTheme.colorScheme
+    //
+    // Save the uri for the image that will get selected
     var uri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-
+    //
+    // camera launcher intent for automatic entry
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                mapViewModel.setImageUri(uri!!)
+                mapViewModel.setImageUri(uri!!, true)
             }
         }
     )
-
-    if (mapViewModel.showPhotoDialog.value) {
-        PhotoPreviewDialog(
-            photoUri = mapViewModel.imageUri.value!!,
-            onConfirm = {
-                mapViewModel.dismissPhotoDialog()
-                navController.navigate("sightingDetail")
-            },
-            onDismiss = {
-                mapViewModel.dismissPhotoDialog()
-            }
-        )
-    }
-
 
     Box(
         modifier = Modifier.wrapContentSize(),
@@ -345,8 +363,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.PhotoCamera,
-                        contentDescription = "Take a Photo",
+                        imageVector = Icons.Filled.AutoFixHigh,
+                        contentDescription = "Add Automatic Entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }
@@ -354,7 +372,9 @@ fun AddSightingButton(
                 FloatingActionButton(
                     onClick = {
                         onExpandedChange(false)
-
+                        val lat = userLocation?.latitude ?: vancouver.latitude
+                        val lng = userLocation?.longitude ?: vancouver.longitude
+                        navController.navigate("sighting/${lat}/${lng}")
                     },
                     containerColor = colorScheme.background,
                     contentColor = colorScheme.onBackground,
@@ -364,8 +384,8 @@ fun AddSightingButton(
                         .padding(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Handyman,
-                        contentDescription = "Add manual entry",
+                        imageVector = Icons.Filled.Draw,
+                        contentDescription = "Add Manual entry",
                         modifier = Modifier.fillMaxSize(0.5f)
                     )
                 }

@@ -127,7 +127,10 @@ fun SightingDetailView(
                 ) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Identifying Animal...", modifier = Modifier.padding(top = 48.dp))
+                    Text("Identifying Animal...",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(top = 48.dp)
+                    )
                 }
             } else {
                 if (viewModel.error.isNotEmpty()) {

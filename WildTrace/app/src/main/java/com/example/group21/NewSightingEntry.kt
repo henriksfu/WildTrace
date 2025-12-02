@@ -312,9 +312,12 @@ fun NewSightingEntry(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
-                    Text("✨ Identify Animal with AI")
+                    Text(
+                        "✨ Identify Animal with AI",
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
                 }
             }
             // --- End AI Button ---

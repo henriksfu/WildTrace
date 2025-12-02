@@ -180,15 +180,15 @@ fun NewSightingEntry(
     //
     val context = LocalContext.current
     var selectedDateMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
-    if(inDate != -1L) selectedDateMillis = inDate
     var selectedTimeMillis by rememberSaveable { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
-    if(inTime != -1L) selectedTimeMillis = inTime
     var tempUri: Uri = Uri.EMPTY
 
     LaunchedEffect(Unit) {
         //
-        // Is there a saved Uri from the AI screen?
+        // Is there saved state from another screen?
         if(ImageHolder.capturedUri != null) imageUri = ImageHolder.capturedUri
+        if(inDate != -1L) selectedDateMillis = inDate
+        if(inTime != -1L) selectedTimeMillis = inTime
     }
 
     // 1. Camera Launcher

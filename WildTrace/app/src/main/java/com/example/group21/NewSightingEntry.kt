@@ -2,9 +2,13 @@ package com.example.group21
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Environment
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -14,22 +18,22 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.group21.database.Sighting
 import com.example.group21.database.SightingViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -39,7 +43,6 @@ fun DatePickerButton(
 ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance().apply { timeInMillis = dateMillis }
-
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     val datePickerDialog = remember {
@@ -47,7 +50,6 @@ fun DatePickerButton(
             context,
             { _, year, month, dayOfMonth ->
                 val newCalendar = Calendar.getInstance().apply {
-                    // TODO make future dates not selectable
                     set(Calendar.YEAR, year)
                     set(Calendar.MONTH, month)
                     set(Calendar.DAY_OF_MONTH, dayOfMonth)
@@ -76,14 +78,12 @@ fun TimePickerButton(
 ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance().apply { timeInMillis = timeMillis }
-
     val timeFormat = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
 
     val timePickerDialog = remember {
         TimePickerDialog(
             context,
             { _, hour, minute ->
-                // TODO make future dates not selectable
                 val newCalendar = Calendar.getInstance().apply {
                     timeInMillis = timeMillis
                     set(Calendar.HOUR_OF_DAY, hour)
@@ -112,12 +112,15 @@ fun NewSightingEntry(
 ) {
     var title by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageUri by remember { mutableStateOf(mapViewModel.imageUri.value) }
     val context = LocalContext.current
     var selectedDateMillis by remember { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
     var selectedTimeMillis by remember { mutableLongStateOf(Calendar.getInstance().timeInMillis) }
-    var tempUri: Uri = Uri.EMPTY
 
+    // Helper to store the temp URI for the camera
+    var tempUri by remember { mutableStateOf(Uri.EMPTY) }
+
+    // 1. Camera Launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -128,14 +131,18 @@ fun NewSightingEntry(
         }
     )
 
+    // 2. Gallery Launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
-            imageUri = uri
+            if (uri != null) {
+                imageUri = uri
+                mapViewModel.setImageUri(uri)
+            }
         }
     )
 
-    if (mapViewModel.showPhotoDialog.value) {
+    if (mapViewModel.showPhotoDialog.value && mapViewModel.imageUri.value != null) {
         PhotoPreviewDialog(
             photoUri = mapViewModel.imageUri.value!!,
             onConfirm = {
@@ -196,6 +203,7 @@ fun NewSightingEntry(
                 .fillMaxWidth()
                 .height(200.dp)
                 .aspectRatio(16f / 9f)
+
             if (imageUri != null) {
                 AsyncImage(
                     model = imageUri,
@@ -217,12 +225,14 @@ fun NewSightingEntry(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- Two Buttons: Camera & Gallery ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(onClick = {
-                    tempUri = createImageFile(context)
+                    // ✅ RENAMED FUNCTION CALL
+                    tempUri = createSightingImage(context)
                     cameraLauncher.launch(tempUri)
                 }) {
                     Icon(Icons.Filled.CameraAlt, contentDescription = "Camera")
@@ -231,11 +241,41 @@ fun NewSightingEntry(
                 }
 
                 Button(onClick = {
+                    // Open the Gallery
                     galleryLauncher.launch("image/*")
                 }) {
                     Icon(Icons.Filled.PhotoLibrary, contentDescription = "Gallery")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Gallery")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // --- ✅ Identify Button (Only shows if photo exists) ---
+            if (imageUri != null) {
+                Button(
+                    onClick = {
+                        try {
+                            // 1. Convert the URI to a Bitmap
+                            val inputStream = context.contentResolver.openInputStream(imageUri!!)
+                            val bitmap = BitmapFactory.decodeStream(inputStream)
+
+                            // 2. Save it to our singleton Holder
+                            ImageHolder.capturedImage = bitmap
+
+                            // 3. Navigate to the Detail View for AI Analysis
+                            navController.navigate("sightingDetail")
+                        } catch (e: Exception) {
+                            Log.e("NewSightingEntry", "Error converting image", e)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("✨ Identify Animal with AI")
                 }
             }
 
@@ -289,7 +329,7 @@ fun NewSightingEntry(
                 Button(
                     onClick = {
                         // insert into database
-                        val sighting: Sighting = Sighting(
+                        val sighting = Sighting(
                             title,
                             "",
                             1,
@@ -312,7 +352,7 @@ fun NewSightingEntry(
                             lng
                         )
                         navController.popBackStack()
-                              },
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Save Sighting")
@@ -321,4 +361,19 @@ fun NewSightingEntry(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+private fun createSightingImage(context: Context): Uri {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+    val image = File.createTempFile(
+        "JPEG_${timeStamp}_",
+        ".jpg",
+        storageDir
+    )
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        image
+    )
 }

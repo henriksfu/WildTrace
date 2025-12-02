@@ -1,72 +1,41 @@
 package com.example.group21
 
 import android.content.Context
-import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.group21.database.SightingViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.style.TextAlign
-import androidx.core.content.FileProvider
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Handyman
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.ui.unit.sp
-import com.example.group21.database.SightingViewModel
 
 @Composable
 fun MapViewScreen(
@@ -81,23 +50,13 @@ fun MapViewScreen(
         position = CameraPosition.fromLatLngZoom(location, 10f)
     }
     val scope = rememberCoroutineScope()
-    
-    val sightingViewModel: SightingViewModel = viewModel()
-    LaunchedEffect(Unit) {
-        Log.d("MAP_SCREEN", "Fetching all sightings...")
-        sightingViewModel.loadAllSightings()
 
-        sightingViewModel.allSightings.observeForever { list ->
-            Log.d("MAP_SCREEN", "Got ${list.size} sightings:")
-            list.forEach {
-                Log.d("MAP_SCREEN", "→ ${it.animalName} (${it.count}x) at ${it.location}")
-            }
-        }
+    val sightingViewModel: SightingViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        sightingViewModel.loadAllSightings()
     }
 
-    var expanded by remember { mutableStateOf(false) }
-
-    val colorScheme = MaterialTheme.colorScheme
     LaunchedEffect(userLocation) {
         userLocation?.let {
             if (cameraPositionState.position.target != it) {
@@ -109,71 +68,55 @@ fun MapViewScreen(
         }
     }
 
-
     if (mapViewModel.showSightingDialog.value) {
         SightingDisplayDialog(
-            onConfirm = {
-                mapViewModel.dismissSightingDialog()
-            },
-            onDismiss = {
-                mapViewModel.dismissSightingDialog()
-            },
+            onConfirm = { mapViewModel.dismissSightingDialog() },
+            onDismiss = { mapViewModel.dismissSightingDialog() },
             sighting = mapViewModel.sightingMarker.value!!
         )
     }
 
+    val mapProperties = MapProperties(isMyLocationEnabled = true)
+    var clickedPoint by remember { mutableStateOf<LatLng?>(null) }
 
-
-    val mapProperties = MapProperties(
-        isMyLocationEnabled = true
-    )
-    var clickedPoint by remember {mutableStateOf<LatLng?>(null)}
     Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
-            onMapClick = { point->
-                clickedPoint = point
-            } ,
-            onMapLongClick =  {
-                mapViewModel.toggleMarkers()
-            }
-
+            onMapClick = { point -> clickedPoint = point },
+            onMapLongClick = { mapViewModel.toggleMarkers() }
         ) {
             mapViewModel.markers.forEach { sightingMarker ->
                 Marker(
                     tag = sightingMarker.id,
                     state = sightingMarker.state,
                     title = sightingMarker.title + " Sighting",
-                    snippet = "Click this to see full details",
+                    snippet = "Click to see details",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
                         sightingMarker.state.showInfoWindow()
                         true
                     },
-                    onInfoWindowClick = {
-                        mapViewModel.showSightingDialog(it.tag as String)
-                    }
-
+                    onInfoWindowClick = { mapViewModel.showSightingDialog(it.tag as String) }
                 )
             }
 
             if (clickedPoint != null) {
                 val markerState = rememberUpdatedMarkerState(position = clickedPoint!!)
-                markerState.showInfoWindow()
                 Marker(
                     state = markerState,
-                    title = "Click the marker to create a new sighting",
+                    title = "New Sighting Here?",
+                    snippet = "Tap + button to add",
                     onClick = {
-                        navController.
-                        navigate("sighting/${clickedPoint!!.latitude}/${clickedPoint!!.longitude}")
+                        markerState.showInfoWindow()
                         true
                     }
                 )
-
             }
         }
+
+        // --- BOTTOM LEFT CONTROLS (Expandable + Button) ---
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -181,239 +124,147 @@ fun MapViewScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.Start
         ) {
+            Row(verticalAlignment = Alignment.Bottom) {
 
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-
-                AddSightingButton(
-                    navController,
-                    mapViewModel,
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it }
+                // ✅ THE NEW EXPANDABLE BUTTON LOGIC
+                ExpandableSightingButton(
+                    navController = navController,
+                    mapViewModel = mapViewModel,
+                    currentCameraTarget = cameraPositionState.position.target
                 )
 
-                // For Searching entries
+                // Search Button
                 FloatingActionButton(
-                    onClick = { /* TODO */ },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
+                    onClick = { navController.navigate("search") },
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
                     shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp)
+                    modifier = Modifier.size(90.dp).padding(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search for Sightings",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
+                    Icon(Icons.Filled.Search, "Search", Modifier.fillMaxSize(0.5f))
                 }
             }
-
-            // Instruction text below the button
-            Text(
-                text = "Take a picture or add a manual entry",
-                style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp),
-                color = colorScheme.onBackground,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .background(
-                        color = colorScheme.background,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .padding(8.dp)
-            )
         }
+
+        // --- BOTTOM RIGHT CONTROLS ---
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(
-                    start = 16.dp,
-                    top = 16.dp,
-                    end = 16.dp,
-                    bottom = 100.dp
-                ),
+                .padding(16.dp, 16.dp, 16.dp, 100.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End
         ) {
             val maxWidth = 180.dp
-            Button(onClick = {
-                navController.
-                navigate("sighting/${cameraPositionState.position.target.latitude}/${cameraPositionState.position.target.longitude}")
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Create New Sighting at Current Location",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            Button(onClick = {
-
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Load All Sightings",
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Button(onClick = { sightingViewModel.loadAllSightings() }, modifier = Modifier.widthIn(max = maxWidth)) {
+                Text("Refresh Sightings", textAlign = TextAlign.Center)
             }
             Button(onClick = {
                 scope.launch {
-                    val currentPosition = cameraPositionState.position.target
-                    cameraPositionState.animate(
-                        update = CameraUpdateFactory.newLatLng(
-                            mapViewModel.randomSighting(
-                                currentPosition
+                    try {
+                        cameraPositionState.animate(
+                            update = CameraUpdateFactory.newLatLng(
+                                mapViewModel.randomSighting(cameraPositionState.position.target)
                             )
                         )
-                    )
+                    } catch (e: Exception) { Log.e("Map", "Error navigating") }
                 }
-            },
-                modifier = Modifier.widthIn(max = maxWidth))
-            {
-                Text("Go to Random Sighting",
-                    maxLines = Int.MAX_VALUE,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            }, modifier = Modifier.widthIn(max = maxWidth)) {
+                Text("Random Sighting", textAlign = TextAlign.Center)
             }
         }
     }
 }
 
 @Composable
-fun AddSightingButton(
+fun ExpandableSightingButton(
     navController: NavController,
-    mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit
-){
-    //
-    // Is it expanded
-    val colorScheme = MaterialTheme.colorScheme
-
-    var uri by remember { mutableStateOf<Uri?>(null) }
+    mapViewModel: MapViewModel,
+    currentCameraTarget: LatLng
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var tempUri by remember { mutableStateOf(Uri.EMPTY) }
     val context = LocalContext.current
 
+    // 1. Camera Logic
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                mapViewModel.setImageUri(uri!!)
+                // Save to ViewModel so Next Screen sees it
+                mapViewModel.setImageUri(tempUri)
+                // Navigate
+                navController.navigate("sighting/${currentCameraTarget.latitude}/${currentCameraTarget.longitude}")
+                expanded = false
             }
         }
     )
 
-    if (mapViewModel.showPhotoDialog.value) {
-        PhotoPreviewDialog(
-            photoUri = mapViewModel.imageUri.value!!,
-            onConfirm = {
-                mapViewModel.dismissPhotoDialog()
-                navController.navigate("sightingDetail")
-            },
-            onDismiss = {
-                mapViewModel.dismissPhotoDialog()
+    // 2. Gallery Logic
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            if (uri != null) {
+                mapViewModel.setImageUri(uri)
+                navController.navigate("sighting/${currentCameraTarget.latitude}/${currentCameraTarget.longitude}")
+                expanded = false
             }
-        )
-    }
+        }
+    )
 
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-    Box(
-        modifier = Modifier.wrapContentSize(),
-        contentAlignment = Alignment.BottomCenter
-    ) {
+        // --- Mini Buttons (Visible when Expanded) ---
         AnimatedVisibility(
             visible = expanded,
-            enter = fadeIn()  + slideInHorizontally  { -it / 2 },
-            exit  = fadeOut() + slideOutHorizontally { -it / 2 }
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 }
         ) {
-            Column() {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(bottom = 12.dp)) {
 
+                // GALLERY BUTTON
                 FloatingActionButton(
-                    onClick = {
-                        onExpandedChange(false)
-                        uri = createImageFile(context)
-                        cameraLauncher.launch(uri!!)
-                    },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp),
+                    onClick = { galleryLauncher.launch("image/*") },
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.size(60.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.PhotoCamera,
-                        contentDescription = "Take a Photo",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
+                    Icon(Icons.Filled.PhotoLibrary, "Gallery")
                 }
 
+                // CAMERA BUTTON
                 FloatingActionButton(
                     onClick = {
-                        onExpandedChange(false)
-
+                        tempUri = createImageFileForMap(context)
+                        cameraLauncher.launch(tempUri)
                     },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp),
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.size(60.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Handyman,
-                        contentDescription = "Add manual entry",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
+                    Icon(Icons.Filled.CameraAlt, "Camera")
                 }
-
             }
         }
 
-        AnimatedVisibility(
-            visible = !expanded,
-            enter = fadeIn()  + slideInHorizontally  { -it / 2 },
-            exit  = fadeOut() + slideOutHorizontally { -it / 2 }
+        // --- Main Toggle Button (+ / X) ---
+        FloatingActionButton(
+            onClick = { expanded = !expanded },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.size(90.dp).padding(8.dp)
         ) {
-            FloatingActionButton(
-                onClick = {
-                    onExpandedChange(true)
-                },
-                containerColor = colorScheme.background,
-                contentColor = colorScheme.onBackground,
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .size(width = 90.dp, height = 90.dp)
-                    .padding(8.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Search",
-                    modifier = Modifier.fillMaxSize(0.5f)
-                )
-            }
+            Icon(
+                imageVector = if (expanded) Icons.Filled.Close else Icons.Filled.Add,
+                contentDescription = "Add",
+                modifier = Modifier.fillMaxSize(0.5f)
+            )
         }
     }
 }
 
-fun createImageFile(context: Context): Uri {
-
-    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CANADA).format(Date())
-    val imageFileName = "JPEG_" + timeStamp + "_"
-
-    val storageDir = context.externalCacheDir
-    val image = File.createTempFile(
-        imageFileName,
-        ".jpg",
-        storageDir
-    )
-
-    return FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.fileprovider",
-        image
-    )
+// Private helper for this file
+private fun createImageFileForMap(context: Context): Uri {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val storageDir = context.getExternalFilesDir(null)
+    val image = File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", image)
 }

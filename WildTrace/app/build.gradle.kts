@@ -1,18 +1,13 @@
-// app/build.gradle.kts
-
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-
-    //id("com.android.application")//already added
-    id("com.google.gms.google-services")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin") // For Maps API Key
+    id("com.google.gms.google-services") // For Firebase services
 }
-
-
 
 android {
     namespace = "com.example.group21"
@@ -27,20 +22,27 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ Secure API keys from local.properties
+        // --- Load API Keys from local.properties ---
+        val properties = Properties()   // ✔️ FIXED — use imported class
+        val localProps = project.rootProject.file("local.properties")
+        if (localProps.exists()) {
+            properties.load(localProps.inputStream())
+        }
+
+        // --- Cloud Vision API key ---
         buildConfigField(
             "String",
-            "INAT_API_KEY",
-            "\"${project.findProperty("INAT_API_KEY") ?: ""}\""
+            "GC_VISION_KEY",
+            "\"${properties.getProperty("GC_VISION_API_KEY") ?: ""}\""
         )
+
+        // --- Wikipedia API Key ---
         buildConfigField(
             "String",
             "WIKI_API_KEY",
-            "\"${project.findProperty("WIKI_API_KEY") ?: ""}\""
+            "\"${properties.getProperty("WIKI_API_KEY") ?: ""}\""
         )
     }
-
-
 
     buildTypes {
         release {
@@ -51,13 +53,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         buildConfig = true
         compose = true
@@ -65,41 +70,48 @@ android {
 }
 
 dependencies {
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Google Services & Maps
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("com.google.maps.android:maps-compose:6.12.0")
-    implementation("androidx.navigation:navigation-compose:2.9.5")
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Compose & UI
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.compose.material:material-icons-extended:1.7.4")
     implementation(platform(libs.androidx.compose.bom))
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.play.services.location)
+    implementation(libs.androidx.compose.animation)
 
-    // --- Navigation & Lifecycle Compose (critical for your MainActivity) ---
-    implementation("androidx.navigation:navigation-compose:2.8.3")
+    // Core Libraries & Architecture
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // Navigation & ViewModel
+    implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
 
-    // --- Material icons for AppBar and UI icons ---
-    implementation("androidx.compose.material:material-icons-extended:1.7.4")
-
-    // --- Coroutines (ViewModel + networking) ---
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-
-    // --- Networking layer for ApiRepository.kt ---
+    // Networking
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation(libs.androidx.compose.animation)
 
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
 
+    // Compatibility/Utility
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.core:core-ktx:1.12.0")
 
-    // --- Debug/Testing tools ---
+    // Testing tools
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -107,11 +119,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // Firebase Bill of Materials
-    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth")
-
 }

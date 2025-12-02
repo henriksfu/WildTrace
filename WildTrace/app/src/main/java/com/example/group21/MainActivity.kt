@@ -1,9 +1,10 @@
 package com.example.group21
 
+import com.example.group21.Util
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap // ✅ ADDED
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -11,9 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -38,10 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,7 +51,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -68,11 +63,15 @@ import com.example.group21.database.SightingViewModel
 import com.example.group21.ui.search.searchView.SearchView
 import com.example.group21.ui.search.sightingDetail.SightingDetailView
 import com.example.group21.ui.theme.WildTraceTheme
-import com.google.android.gms.maps.MapView
 import com.google.firebase.BuildConfig
 import com.google.firebase.Firebase
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+
+// ✅ NEW: A temporary holder for the image to pass it between screens
+object ImageHolder {
+    var capturedImage: Bitmap? = null
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +79,7 @@ class MainActivity : ComponentActivity() {
         val analytics = Firebase.analytics
         analytics.setAnalyticsCollectionEnabled(true)
 
-        if (BuildConfig.DEBUG) {//always false
+        if (BuildConfig.DEBUG) {
             analytics.setUserProperty("debug_mode", "emulator_api36")
             Log.d("FirebaseInit", "Debug mode ON – API 36 emulator")
         }
@@ -129,9 +128,6 @@ fun AppNavigation(navController: NavHostController) {
 
         // --- Map Screen ---
         composable("map") { backStackEntry ->
-
-            // ViewModels scoped to this NavGraph level
-
             val graphEntry = navController.getBackStackEntry("authentication_graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
 
@@ -159,9 +155,6 @@ fun AppNavigation(navController: NavHostController) {
                 navArgument("longitude") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
-
-            // make sure its same viewmodel instances
-
             val graphEntry = navController.getBackStackEntry("authentication_graph")
             val mapViewModel: MapViewModel = viewModel(graphEntry)
             val sightingViewModel: SightingViewModel = viewModel(graphEntry)
@@ -182,13 +175,17 @@ fun AppNavigation(navController: NavHostController) {
             SearchView()
         }
 
+        // ✅ FIXED: Now passes the image from ImageHolder to the view
         composable("sightingDetail") {
             SightingDetailView(
+                capturedImage = ImageHolder.capturedImage, // Pass the singleton image
                 onBack = { navController.popBackStack() }
             )
         }
     }
 }
+
+// --- Login & Signup Views (Kept exactly as original) ---
 
 @Composable
 fun LoginView(navController: NavController,
@@ -376,8 +373,6 @@ fun SignupInput(labelText: String, text: String, onChange: (String) -> Unit) {
 @Composable
 fun SignupView(navController: NavController,
                viewModel: AuthViewModel) {
-    //
-    // Has access to the entered email and password
     val email    by viewModel.email
     val password by viewModel.password
     val fName    by viewModel.fName
@@ -445,8 +440,6 @@ fun SignupView(navController: NavController,
 @Composable
 fun ProfileView(navController: NavController,
                 viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
-    //
-    // Has access to the entered email and password
     val email    by viewModel.email
     val password by viewModel.password
     val fName    by viewModel.fName

@@ -82,7 +82,6 @@ fun MapViewScreen(
     sightingViewModel: SightingViewModel
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val userLocation by mapViewModel.userLocation
     //
     // Get context for the bitmap conversion
@@ -124,8 +123,6 @@ fun MapViewScreen(
             val lat = sighting.location?.latitude ?: 0.0
             val lng = sighting.location?.longitude ?: 0.0
             val latLng = LatLng(lat, lng)
-            //val debugIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-            //mapViewModel.addMarker(latLng, sighting, debugIcon)
             mapViewModel.addMarker(latLng, sighting, descriptor)
         }
     }
@@ -173,10 +170,10 @@ fun MapViewScreen(
                 Marker(
                     tag = sightingMarker.sighting.documentId,
                     state = rememberedMarkerState,
-                    title = sightingMarker.sighting.animalName + " Sighting",
+                    title = sightingMarker.sighting.animalName,
                     icon = sightingMarker.thumbnail,
                     anchor = Offset(0.5f, 1f),
-                    snippet = "Click to see more detail",
+                    snippet = "Click to see more details",
                     visible = sightingMarker.isVisible.value,
                     onClick = {
                         mapViewModel.showSightingDialog(it.tag as String)

@@ -28,20 +28,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.group21.PreviewButton
 import com.example.group21.R
 import com.example.group21.database.Sighting
-import com.example.group21.database.SightingViewModel
-import java.util.Date
 
 @Composable
 fun CardDetailsView(
-    sightingViewModel: SightingViewModel,
+    navController: NavController,
     sighting: Sighting,
     onDismiss: () -> Unit,
-    showInMap: (Sighting) -> Unit
 ) {
     val scrollState = rememberScrollState()
     val colorScheme = MaterialTheme.colorScheme
@@ -83,6 +81,13 @@ fun CardDetailsView(
                 modifier = Modifier.padding(vertical = 16.dp),
             )
 
+            Text(
+                text = "TODO: add date here",
+                color = colorScheme.onBackground,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+
             AsyncImage(
                 model = imageRequest,
                 contentDescription = "Sighting Photo",
@@ -92,8 +97,6 @@ fun CardDetailsView(
                     .padding(bottom = 16.dp),
                 contentScale = ContentScale.Fit
             )
-
-            dateDisplay()
 
             Text(
                 text = sighting.notes,
@@ -109,30 +112,9 @@ fun CardDetailsView(
             ) {
                 PreviewButton("Back", 1f, onDismiss)
                 PreviewButton("Locate", 1f, {
-                    showInMap(sighting) })
+                    navController.navigate("locate_sighting/${sighting.documentId}")
+                })
             }
         }
-    }
-}
-
-@Composable
-fun dateDisplay(
-    // date: Date
-){
-
-    val colorScheme = MaterialTheme.colorScheme
-
-    Button(
-        onClick = {  },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.primary,
-            contentColor = colorScheme.onBackground,
-            disabledContainerColor = colorScheme.primary,
-            disabledContentColor = colorScheme.onBackground
-        ),
-    ) {
-        Text(
-            text = "TODO"
-        )
     }
 }

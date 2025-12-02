@@ -163,12 +163,9 @@ fun SearchView(
     // Shows the popup when a sighting is clicked on
     if (selectedSighting != null) {
         CardDetailsView(
-            sightingViewModel = sightingViewModel,
+            navController = navController,
             sighting = selectedSighting!!,
             onDismiss = { selectedSighting = null },
-            showInMap = {
-
-            }
         )
     }
 }

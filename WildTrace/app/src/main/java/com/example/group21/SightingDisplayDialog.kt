@@ -26,8 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.group21.database.SightingViewModel
-import com.example.group21.ui.sightingDetail.dateDisplay
 
 
 @Composable
@@ -75,6 +73,13 @@ fun SightingDisplayDialog(
                 modifier = Modifier.padding(vertical = 16.dp),
             )
 
+            Text(
+                text = "TODO: add date here",
+                color = colorScheme.onBackground,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+
             AsyncImage(
                 model = imageRequest,
                 contentDescription = "Sighting Photo",
@@ -84,8 +89,6 @@ fun SightingDisplayDialog(
                     .padding(bottom = 16.dp),
                 contentScale = ContentScale.Fit
             )
-
-            dateDisplay()
 
             Text(
                 text = sightingMarker.sighting.notes,

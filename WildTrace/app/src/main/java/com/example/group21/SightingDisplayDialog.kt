@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -33,7 +36,7 @@ fun SightingDisplayDialog(
     onDismiss: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
-
+    val colorScheme = MaterialTheme.colorScheme
     //
     // Get the asynchronous image load
     val imageRequest = ImageRequest.Builder(LocalContext.current)
@@ -45,7 +48,7 @@ fun SightingDisplayDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xD0000000))
+            .background(Color(0xDD000000))
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -54,10 +57,23 @@ fun SightingDisplayDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.9f)
                 .wrapContentHeight()
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .background(
+                    color = colorScheme.background,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
+
+            Text(
+                text = sightingMarker.sighting.animalName,
+                color = colorScheme.onBackground,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 16.dp),
+            )
 
             AsyncImage(
                 model = imageRequest,
@@ -73,7 +89,7 @@ fun SightingDisplayDialog(
 
             Text(
                 text = sightingMarker.sighting.notes,
-                color = Color.White,
+                color = colorScheme.onBackground,
                 fontSize = 18.sp,
                 modifier = Modifier.padding(vertical = 16.dp),
             )

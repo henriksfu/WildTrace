@@ -73,6 +73,7 @@ import androidx.compose.ui.window.Popup
 import com.example.group21.database.SightingViewModel
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.maps.android.compose.MarkerState
 
 val vancouver = LatLng(49.2827, -123.1207)
 @Composable
@@ -164,21 +165,24 @@ fun MapViewScreen(
                 mapLoaded = true
             }
         ) {
-            markers.forEach { sightingMarker ->
-
-                Log.e("MAP_MARKERS", "Rendering ${mapViewModel.markers.size} markers")
-                //
-                // remember the visibility state
-                val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
-                //
+            markers.forEach { marker ->
+                val markerState = remember(marker.sighting.documentId) {
+                    MarkerState(position = marker.state.position)
+                }.apply {
+                    position = marker.state.position
+                }
+                val icon = remember(marker.sighting.documentId) {
+                    marker.thumbnail
+                }
+                Log.e("MAP_MARKERS", "Rendering ${markers.size} markers")
                 Marker(
-                    tag = sightingMarker.sighting.documentId,
-                    state = rememberedMarkerState,
-                    title = sightingMarker.sighting.animalName,
-                    icon = sightingMarker.thumbnail,
+                    tag = marker.sighting.documentId,
+                    state = markerState,
+                    title = marker.sighting.animalName,
+                    icon = icon,
                     anchor = Offset(0.5f, 1f),
                     snippet = "Click to see more details",
-                    visible = sightingMarker.isVisible.value,
+                    visible = marker.isVisible.value,
                     onClick = {
                         mapViewModel.showSightingDialog(it.tag as String)
                         true

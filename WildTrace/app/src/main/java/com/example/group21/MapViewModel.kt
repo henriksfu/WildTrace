@@ -37,7 +37,6 @@ class MapViewModel( ) : ViewModel() {
     private val _userLocation = mutableStateOf<LatLng?>(null)
     val userLocation: State<LatLng?> = _userLocation
     private lateinit var fusedClient: FusedLocationProviderClient
-
     //
     // Get the user' current location. This is used for adding entries
     @SuppressLint("MissingPermission")

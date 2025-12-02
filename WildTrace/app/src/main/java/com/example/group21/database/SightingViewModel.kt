@@ -14,9 +14,6 @@ class SightingViewModel(
     fun saveSighting(localImageUri: Uri, sighting: Sighting) {
         //val currentUser = FirebaseAuth.getInstance().currentUser ?: return //Authentication is instead done by caller
         //
-        // Add to the livedata
-        _allSightings.value = (_allSightings.value ?: emptyList()) + sighting
-        //
         // Save to the database
         viewModelScope.launch {
             Log.i("sighting","Calling repo.saveSighting")

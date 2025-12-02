@@ -1,5 +1,9 @@
 package com.example.group21.ui.search.sightingDetail
 
+import android.graphics.Bitmap
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,35 +16,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
-import androidx.compose.material3.Button
-import androidx.compose.foundation.layout.fillMaxWidth
-
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.analytics
-import com.google.firebase.analytics.logEvent
-
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SightingDetailView(
     sightingId: String = "10001",
+    capturedImage: Bitmap?, // <--- NEW: Accept the photo from the Camera Screen
     onBack: () -> Unit = {},
     viewModel: SightingDetailViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
-    // ✅ Pass Context to get Real Location/Date on entry
+    // ✅ TRIGGER: When screen opens, send the photo to the ViewModel for AI Analysis
     LaunchedEffect(Unit) {
-        viewModel.onConfirmAndSearch(context)
+        if (capturedImage != null) {
+            viewModel.onConfirmAndSearch(context, capturedImage)
+        } else {
+            // Handle case where we are viewing an old sighting (no new photo)
+            viewModel.onConfirmAndSearch(context, null)
+        }
     }
 
     Scaffold(
@@ -60,8 +60,8 @@ fun SightingDetailView(
         bottomBar = {
             Button(
                 onClick = {
-                    // ✅ Pass Context here too
-                    viewModel.onConfirmAndSearch(context)
+                    // Retry or Confirm button
+                    viewModel.onConfirmAndSearch(context, capturedImage)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -69,9 +69,9 @@ fun SightingDetailView(
                 enabled = !viewModel.isLoading
             ) {
                 if (viewModel.isLoading) {
-                    Text("Searching...")
+                    Text("Analyzing...")
                 } else {
-                    Text("Save the Sighting")
+                    Text("Save Sighting")
                 }
             }
         }
@@ -85,14 +85,32 @@ fun SightingDetailView(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            AnimalImage(url = viewModel.imageUrl)
+            // ✅ UI CHANGE: Show the Captured Photo if available, otherwise Wiki Image
+            if (capturedImage != null) {
+                Image(
+                    bitmap = capturedImage.asImageBitmap(),
+                    contentDescription = "Captured Photo",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.Gray),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Fallback to Wikipedia Image (e.g. if viewing history)
+                AnimalImage(url = viewModel.imageUrl)
+            }
 
+            // --- Loading & Results Section ---
             if (viewModel.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Identifying Animal...", modifier = Modifier.padding(top = 48.dp))
                 }
             } else {
                 if (viewModel.error.isNotEmpty()) {
@@ -101,20 +119,31 @@ fun SightingDetailView(
                         color = MaterialTheme.colorScheme.error
                     )
                 } else {
+                    // Only show data if we have loaded something
                     if (viewModel.animalName != "Loading...") {
+
+                        // 1. Name
                         Text(
-                            text = "Animal Identified: ${viewModel.animalName}",
+                            text = "Identified: ${viewModel.animalName}",
                             style = MaterialTheme.typography.headlineSmall
                         )
 
-                        Text(
-                            text = viewModel.wikiSummary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
+                        // 2. Metadata (Location/Date)
                         MetadataSection(
                             location = viewModel.locationText,
                             date = viewModel.dateObserved
+                        )
+
+                        HorizontalDivider()
+
+                        // 3. Wikipedia Summary
+                        Text(
+                            text = "About this animal:",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = viewModel.wikiSummary,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -123,12 +152,14 @@ fun SightingDetailView(
     }
 }
 
+// --- Helpers ---
+
 @Composable
 fun AnimalImage(url: String) {
     if (url.isNotEmpty()) {
         AsyncImage(
             model = url,
-            contentDescription = "Animal Photo",
+            contentDescription = "Wiki Animal Photo",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp)
@@ -154,13 +185,19 @@ fun MetadataSection(location: String, date: String) {
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(
-            text = "Observed At: $location",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Text(
-            text = "Date: $date",
-            style = MaterialTheme.typography.bodySmall
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "📍 ", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = location,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "📅 ", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = date,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }

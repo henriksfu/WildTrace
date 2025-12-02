@@ -7,8 +7,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.group21.database.Sighting
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -17,7 +15,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
-import kotlin.math.abs
+import kotlin.random.Random // Import for Random number generation
 
 data class SightingMarker(
     val state: MarkerState,
@@ -107,5 +105,18 @@ class MapViewModel( ) : ViewModel() {
         }
     }
 
-}
+    /**
+     * Finds a random sighting marker location to move the map camera to.
+     * @param currentPosition The current map center (used as fallback if no markers exist).
+     * @return LatLng of a random marker or the current position.
+     */
+    fun randomSighting(currentPosition: LatLng): LatLng {
+        if (_markers.isEmpty()) {
+            return currentPosition
+        }
+        // Generate a random index between 0 and size - 1
+        val randomIndex = Random.nextInt(0, _markers.size)
+        return _markers[randomIndex].state.position
+    }
 
+}

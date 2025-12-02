@@ -62,7 +62,6 @@ import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.runtime.CompositionContext
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.ui.geometry.Offset
@@ -85,9 +84,6 @@ fun MapViewScreen(
 ) {
     val context = LocalContext.current
     val userLocation by mapViewModel.userLocation
-    //
-    // get a list of the markers
-    val markers by remember { derivedStateOf { mapViewModel.markers.toList() } }
     //
     // Get context for the bitmap conversion
     val compositionContext = rememberCompositionContext()
@@ -165,16 +161,13 @@ fun MapViewScreen(
                 mapLoaded = true
             }
         ) {
-            markers.forEach { marker ->
-                val markerState = remember(marker.sighting.documentId) {
-                    MarkerState(position = marker.state.position)
-                }.apply {
-                    position = marker.state.position
-                }
-                val icon = remember(marker.sighting.documentId) {
-                    marker.thumbnail
-                }
-                Log.e("MAP_MARKERS", "Rendering ${markers.size} markers")
+            mapViewModel.markers.forEach { sightingMarker ->
+
+                Log.e("MAP_MARKERS", "Rendering ${mapViewModel.markers.size} markers")
+                //
+                // remember the visibility state
+                val rememberedMarkerState = rememberUpdatedMarkerState(position = sightingMarker.state.position)
+                //
                 Marker(
                     tag = marker.sighting.documentId,
                     state = markerState,

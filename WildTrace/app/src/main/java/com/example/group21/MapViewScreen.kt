@@ -328,97 +328,29 @@ fun AddSightingButton(
 ){
     val colorScheme = MaterialTheme.colorScheme
     //
-    // Save the uri for the image that will get selected
-    var uri by remember { mutableStateOf<Uri?>(null) }
-    val context = LocalContext.current
-    //
-    // camera launcher intent for automatic entry
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success ->
-            if (success) {
-                mapViewModel.setImageUri(uri!!, true)
-            }
-        }
-    )
-
     Box(
         modifier = Modifier.wrapContentSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        AnimatedVisibility(
-            visible = expanded,
-            enter = fadeIn()  + slideInHorizontally  { -it / 2 },
-            exit  = fadeOut() + slideOutHorizontally { -it / 2 }
+        FloatingActionButton(
+            onClick = {
+                onExpandedChange(false)
+                val lat = userLocation?.latitude ?: vancouver.latitude
+                val lng = userLocation?.longitude ?: vancouver.longitude
+                navController.navigate("sighting/${lat}/${lng}")
+            },
+            containerColor = colorScheme.background,
+            contentColor = colorScheme.onBackground,
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .size(width = 90.dp, height = 90.dp)
+                .padding(8.dp),
         ) {
-            Column() {
-
-                FloatingActionButton(
-                    onClick = {
-                        onExpandedChange(false)
-                        uri = createImageFile(context)
-                        cameraLauncher.launch(uri!!)
-                    },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.AutoFixHigh,
-                        contentDescription = "Add Automatic Entry",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
-                }
-
-                FloatingActionButton(
-                    onClick = {
-                        onExpandedChange(false)
-                        val lat = userLocation?.latitude ?: vancouver.latitude
-                        val lng = userLocation?.longitude ?: vancouver.longitude
-                        navController.navigate("sighting/${lat}/${lng}")
-                    },
-                    containerColor = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .size(width = 90.dp, height = 90.dp)
-                        .padding(8.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Draw,
-                        contentDescription = "Add Manual entry",
-                        modifier = Modifier.fillMaxSize(0.5f)
-                    )
-                }
-
-            }
-        }
-
-        AnimatedVisibility(
-            visible = !expanded,
-            enter = fadeIn()  + slideInHorizontally  { -it / 2 },
-            exit  = fadeOut() + slideOutHorizontally { -it / 2 }
-        ) {
-            FloatingActionButton(
-                onClick = {
-                    onExpandedChange(true)
-                },
-                containerColor = colorScheme.background,
-                contentColor = colorScheme.onBackground,
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .size(width = 90.dp, height = 90.dp)
-                    .padding(8.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Search",
-                    modifier = Modifier.fillMaxSize(0.5f)
-                )
-            }
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add Manual entry",
+                modifier = Modifier.fillMaxSize(0.5f)
+            )
         }
     }
 }

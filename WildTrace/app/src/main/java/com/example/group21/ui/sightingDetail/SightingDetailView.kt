@@ -95,7 +95,7 @@ fun SightingDetailView(
             ) {
                 Button(
                     onClick = {
-                        navController.navigate("sighting/${latitude}/${longitude}/${""}/${""}/${-1L}/${-1L}/${""}")
+                        navController.navigate("sighting/${latitude}/${longitude}/${animalName}/${comment}/${date}/${time}/${""}")
                     },
                     modifier = Modifier
                         .padding(8.dp),
@@ -105,9 +105,7 @@ fun SightingDetailView(
                 }
                 Button(
                     onClick = {
-                        navController.navigate(
-                            "sighting/{$latitude}/{$longitude}/{$animalName}/{$comment}/{$date}/{$time}/{$capturedUri.toString()}"
-                        )
+                        navController.navigate("sighting/${latitude}/${longitude}/${animalName}/${comment}/${date}/${time}/${""}")
                     },
                     modifier = Modifier
                         .padding(8.dp),

@@ -120,7 +120,7 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(
-            "locate_sighting/{sighting.documentId}",
+            "locate_sighting/{sightingId}",
             arguments = listOf(
                 navArgument("sightingId") { type = NavType.StringType },
             )

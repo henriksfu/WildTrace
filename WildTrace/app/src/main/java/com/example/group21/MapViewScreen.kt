@@ -73,6 +73,9 @@ import com.example.group21.database.SightingViewModel
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.MarkerState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 
 val vancouver = LatLng(49.2827, -123.1207)
 @Composable
@@ -97,30 +100,36 @@ fun MapViewScreen(
     //
     // On launch
     LaunchedEffect(allSightings) {
-        //
-        // First, clear the markers
         mapViewModel.clearMarkers()
-        //
-        // Is there anything to do?
-        if( allSightings.isEmpty() ) return@LaunchedEffect
-        //
-        // Create a marker for each sighting
-        for ( sighting in allSightings ){
-            //
-            // Get the bitmap for the custom marker
-            val bitmap = createSightingMarkerBitmap(
-                context = context,
-                imageUrl = sighting.photoUrl,
-                color = markerBorderColor
-            )
-            //
-            // Convert it into a bitmap descriptor
-            val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
-            //
-            // Add the marker
-            val lat = sighting.location?.latitude ?: 0.0
-            val lng = sighting.location?.longitude ?: 0.0
-            val latLng = LatLng(lat, lng)
+
+        if (allSightings.isEmpty()) return@LaunchedEffect
+
+        // Launch all marker loads in parallel
+        val markerJobs = allSightings.map { sighting ->
+            async(Dispatchers.IO) {
+                val latLng = LatLng(
+                    sighting.location?.latitude ?: 0.0,
+                    sighting.location?.longitude ?: 0.0
+                )
+
+                val bitmap = createSightingMarkerBitmap(
+                    context = context,
+                    imageUrl = sighting.photoUrl,
+                    color = markerBorderColor
+                )
+
+                val descriptor = BitmapDescriptorFactory.fromBitmap(bitmap)
+
+                Pair(latLng, sighting to descriptor)
+            }
+        }
+
+        // Wait for everything to finish
+        val results = markerJobs.awaitAll()
+
+        // Add them all at once
+        results.forEach { (latLng, pair) ->
+            val (sighting, descriptor) = pair
             mapViewModel.addMarker(latLng, sighting, descriptor)
         }
     }

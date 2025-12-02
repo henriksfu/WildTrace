@@ -54,6 +54,9 @@ import com.example.group21.R
 import com.example.group21.ui.sightingDetail.CardDetailsView
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SearchView(
@@ -144,50 +147,6 @@ fun SearchView(
             SearchButton("Wipe Sightings", 1f, {
                 sightingViewModel.wipeAllSightings()
             })
-            Row() {
-                SearchButton("Horse", 1f,  {
-                    // 1️⃣ Create a temporary dummy file
-                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
-
-                    // 2️⃣ Write a tiny 1-byte dummy image
-                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
-
-                    // 3️⃣ Convert to Android Uri
-                    val tempUri = Uri.fromFile(tempFile)
-
-                    // 4️⃣ Create a minimal Sighting and save
-                    val dummySighting = Sighting(animalName = "horse")
-                    sightingViewModel.saveSighting(tempUri, dummySighting)
-                })
-                SearchButton("Zebra", 1f,  {
-                    // 1️⃣ Create a temporary dummy file
-                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
-
-                    // 2️⃣ Write a tiny 1-byte dummy image
-                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
-
-                    // 3️⃣ Convert to Android Uri
-                    val tempUri = Uri.fromFile(tempFile)
-
-                    // 4️⃣ Create a minimal Sighting and save
-                    val dummySighting = Sighting(animalName = "zebra")
-                    sightingViewModel.saveSighting(tempUri, dummySighting)
-                })
-                SearchButton("Pikachu", 1f,  {
-                    // 1️⃣ Create a temporary dummy file
-                    val tempFile = File.createTempFile("placeholder", ".jpg").apply { deleteOnExit() }
-
-                    // 2️⃣ Write a tiny 1-byte dummy image
-                    FileOutputStream(tempFile).use { it.write(ByteArray(1)) }
-
-                    // 3️⃣ Convert to Android Uri
-                    val tempUri = Uri.fromFile(tempFile)
-
-                    // 4️⃣ Create a minimal Sighting and save
-                    val dummySighting = Sighting(animalName = "Pikachu")
-                    sightingViewModel.saveSighting(tempUri, dummySighting)
-                })
-            }
             //
             // Set up the recycler view
             SightingList(allSightings, 2, selectedSighting, {
@@ -226,7 +185,7 @@ fun SightingList(
             items = items,
             key = { it.documentId?: it.hashCode().toString() }
         ) { s ->
-            SightingCard(s, Modifier, { onClick(s) } )
+            SightingCard(s, Modifier) { onClick(s) }
         }
     }
 }
@@ -327,9 +286,8 @@ fun SightingCard(
 ) {
     //
     //  Make date string to display
-    val date = if (sighting.createdAt==null) java.util.Date() else sighting.createdAt.toDate()
-    val formatter = java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault())
-    val displayDate = formatter.format(date)
+    val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
+    val timeStr = formatter.format(sighting.sightingDateTime?.toDate()?: Date())
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -374,7 +332,7 @@ fun SightingCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = displayDate,
+                    text = timeStr,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.DarkGray
                 )

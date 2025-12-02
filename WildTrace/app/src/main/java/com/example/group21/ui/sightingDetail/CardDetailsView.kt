@@ -34,6 +34,9 @@ import coil.request.ImageRequest
 import com.example.group21.PreviewButton
 import com.example.group21.R
 import com.example.group21.database.Sighting
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CardDetailsView(
@@ -50,6 +53,9 @@ fun CardDetailsView(
         .error(R.drawable.image_not_found)
         .fallback(R.drawable.image_not_found)
         .build()
+
+    val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
+    val timeStr = formatter.format(sighting.sightingDateTime?.toDate()?: Date())
 
     Box(
         modifier = Modifier
@@ -82,10 +88,10 @@ fun CardDetailsView(
             )
 
             Text(
-                text = "TODO: add date here",
+                text = timeStr,
                 color = colorScheme.onBackground,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = 8.dp),
+                modifier = Modifier.padding(bottom = 16.dp),
             )
 
             AsyncImage(

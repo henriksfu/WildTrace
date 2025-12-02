@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
@@ -35,6 +38,8 @@ fun SightingDisplayDialog(
 ) {
     val scrollState = rememberScrollState()
     val colorScheme = MaterialTheme.colorScheme
+    val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
+    val timeStr = formatter.format(sightingMarker.sighting.sightingDateTime?.toDate()?: Date())
     //
     // Get the asynchronous image load
     val imageRequest = ImageRequest.Builder(LocalContext.current)
@@ -74,10 +79,10 @@ fun SightingDisplayDialog(
             )
 
             Text(
-                text = "TODO: add date here",
+                text = timeStr,
                 color = colorScheme.onBackground,
                 fontSize = 16.sp,
-                modifier = Modifier.padding(vertical = 8.dp),
+                modifier = Modifier.padding(top = 16.dp),
             )
 
             AsyncImage(

@@ -78,18 +78,18 @@ fun SightingDetailView(
         },
         bottomBar = {
             Row(
-                modifier = Modifier.fillMaxWidth(0.8f).padding(bottom = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 0.dp, bottom = 48.dp, start = 16.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = {
-                        navController.popBackStack()
+                        //navController.popBackStack()
                     },
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .padding(bottom = 48.dp)
-                        .background(color = MaterialTheme.colorScheme.tertiary),
+                        .padding(8.dp),
                     enabled = !viewModel.isLoading
                 ) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onBackground)
@@ -99,9 +99,7 @@ fun SightingDetailView(
                         viewModel.onConfirmAndSearch(context, capturedImage)
                     },
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .padding(bottom = 48.dp)
-                        .background(color = MaterialTheme.colorScheme.tertiary),
+                        .padding(8.dp),
                     enabled = !viewModel.isLoading
                 ) {
                     if (viewModel.isLoading) {
